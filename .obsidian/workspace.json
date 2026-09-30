@@ -1,0 +1,280 @@
+{
+  "main": {
+    "id": "77e85f3f970997b1",
+    "type": "split",
+    "children": [
+      {
+        "id": "1f16e35cd986fb42",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "bcddd0f82b90becd",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Project Specification/PRD.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "PRD"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "c8c5f79e0527b1b4",
+    "type": "split",
+    "children": [
+      {
+        "id": "d46aecce6a1078b0",
+        "type": "tabs",
+        "dimension": 66.66666666666667,
+        "children": [
+          {
+            "id": "42af4f1ef891900d",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "8042cedd39507497",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "d481b69de8ac5693",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      },
+      {
+        "id": "2af4f3c830b17026",
+        "type": "tabs",
+        "dimension": 33.333333333333336,
+        "children": [
+          {
+            "id": "981d4ae76a88fb41",
+            "type": "leaf",
+            "state": {
+              "type": "graph",
+              "state": {},
+              "icon": "lucide-git-fork",
+              "title": "Graph view"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "279416c7625b4660",
+    "type": "split",
+    "children": [
+      {
+        "id": "2fd9a64f0deb3159",
+        "type": "tabs",
+        "dimension": 67.85714285714286,
+        "children": [
+          {
+            "id": "53f920f8060070a2",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "iPad MINI and FF Dec 2025.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks for iPad MINI and FF Dec 2025"
+            }
+          },
+          {
+            "id": "5720a8812050f3b7",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links"
+            }
+          },
+          {
+            "id": "df102072c4a377ae",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": false,
+                "showSearch": true,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "4c18205f15a43f5d",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {},
+              "icon": "lucide-list",
+              "title": "Outline"
+            }
+          },
+          {
+            "id": "c6412785a0953c64",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          }
+        ],
+        "currentTab": 2
+      },
+      {
+        "id": "2a5073634fabf08a",
+        "type": "tabs",
+        "dimension": 32.142857142857146,
+        "children": [
+          {
+            "id": "0c7f632e897519ae",
+            "type": "leaf",
+            "state": {
+              "type": "calendar",
+              "state": {},
+              "icon": "lucide-ghost",
+              "title": "calendar"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "obsidian-github-sync:Push updates to GitHub": false,
+      "obsidian-github-sync:Sync vault with GitHub (Pull & Push)": false,
+      "pdf-plus:PDF++: Toggle auto-copy": false,
+      "pdf-plus:PDF++: Toggle auto-focus": false,
+      "pdf-plus:PDF++: Toggle auto-paste": false,
+      "bases:Create new base": false,
+      "markdown-importer:Open format converter": false,
+      "audio-recorder:Start/stop recording": false,
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "univer:Univer": false,
+      "obsidian-importer:Open Importer": false
+    }
+  },
+  "active": "42af4f1ef891900d",
+  "lastOpenFiles": [
+    "PRD.md",
+    "Project Specification/PRD.md",
+    "Untitled.md",
+    "Study/SonicCode Hash Function - Design Decisions.md",
+    "Study/Hash Functions in Java - Keywords.md",
+    " Sem 3/Operating Systems/OS-CS310-Practice-Quiz.md",
+    "Carbon Neutrality - Myth or Reality Presentation Script.md",
+    " Sem 3/Operating Systems/Memory-Management.md",
+    " Sem 3/University Elective Subjects.md",
+    " Sem 3/Operating Systems/Process-Scheduling.md",
+    " Sem 3/Operating Systems/OS-CS310 MOC.md",
+    " Sem 3/Operating Systems/Cache-Memory.md",
+    " Sem 3/Operating Systems/Dada PDFs/SIH_2026_Student_Guidelines_With_Themes.pdf",
+    " Sem 3/Operating Systems/Dada PDFs/Marks_Scheme_19Aug2026.pdf",
+    " Sem 3/Operating Systems/Dada PDFs/L-24_OS_CS310_Disk_Sch.pdf",
+    " Sem 3/Operating Systems/Dada PDFs/L-23_OS_CS310_Priority_Sch.pdf",
+    " Sem 3/Operating Systems/Dada PDFs/L-22_OS_CS310_LRU_MRU_Set_n_Fully_Assoc.pdf",
+    " Sem 3/Operating Systems/Dada PDFs/L-21_OS_CS310_LRU_MRU_Block_Replacement.pdf",
+    " Sem 3/Operating Systems/Dada PDFs/L-20_OS_CS310_FIFO_Block_Replacement.pdf",
+    " Sem 3/Operating Systems/Dada PDFs/L-19_OS_CS310_Cache_Mapping2.pdf",
+    " Sem 3/Operating Systems/Dada PDFs/L-18_OS_CS310_Direct_Mapping.pdf",
+    " Sem 3/Operating Systems/Dada PDFs/L-17_OS_CS310_Cache_Memory.pdf",
+    " Sem 3/Object Oriented Programming/phad Topics for Exams.md",
+    " Sem 3/Computer Architecture/Computer Systems.md",
+    " Sem 3/Computer Architecture/Assignment 1.md",
+    " Sem 3/Data Structures and Algorithms/Group Activity/Activity 2/Algorithm.md",
+    " Sem 3/Object Oriented Programming/test in code.md",
+    " Sem 3/Object Oriented Programming/Static VS Dynamic Memory Allocation.md",
+    " Sem 3/Object Oriented Programming/Java Arrays.md",
+    " Sem 3/Object Oriented Programming/Important SHIT.md",
+    " Sem 3/Object Oriented Programming/Resources.md",
+    "Personal Projects/Expense Tracker/backend/venv/lib/python3.14/site-packages/uvicorn-0.44.0.dist-info/licenses/LICENSE.md",
+    "Personal Projects/Expense Tracker/backend/venv/lib/python3.14/site-packages/starlette-1.0.0.dist-info/licenses/LICENSE.md",
+    "Personal Projects/Expense Tracker/backend/venv/lib/python3.14/site-packages/idna-3.11.dist-info/licenses/LICENSE.md",
+    "Personal Projects/Expense Tracker/backend/venv/lib/python3.14/site-packages/httpx-0.28.1.dist-info/licenses/LICENSE.md",
+    "Personal Projects/Expense Tracker/backend/venv/lib/python3.14/site-packages/httpcore-1.0.9.dist-info/licenses/LICENSE.md",
+    "Personal Projects/portfolio/src/assets/devices/macbook.png",
+    "Personal Projects/portfolio/src/assets/devices/iphone.png",
+    "Personal Projects/portfolio/src/assets/devices/ipad.png",
+    "Personal Projects/portfolio/src/assets/profile.png",
+    "Personal Projects/portfolio/src/assets/favicon.png",
+    "Personal Projects/portfolio/dist/assets/profile-BDFT9Wmq.png",
+    "Personal Projects/portfolio/dist/assets/macbook-DoNzGP2p.png",
+    "Personal Projects/portfolio/dist/assets/ipad-JfDTpk9t.png",
+    "Personal Projects/portfolio/dist/assets/iphone-CRKmAt08.png",
+    "Personal Projects/portfolio/public/placeholder.svg",
+    "Business/Journal/Technical/Migrated/Mind Map.canvas",
+    "Journal/Technical/Migrated/Mind Map.canvas",
+    "Technical/Migrated/Mind Map.canvas"
+  ]
+}

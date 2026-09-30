@@ -1,0 +1,10 @@
+{
+  "id": "obsidian-github-sync",
+  "name": "GitHub Sync",
+  "version": "1.0.0",
+  "minAppVersion": "1.4.0",
+  "description": "Two-way sync of your Obsidian vault via GitHub (Git Trees API on mobile, git CLI on laptop).",
+  "author": "rudpersonal",
+  "authorUrl": "https://github.com/rudpersonal",
+  "isDesktopOnly": false
+}
