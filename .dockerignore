@@ -1,0 +1,18 @@
+# VCS / tooling
+.git
+.obsidian
+Study
+Diagrams
+Project Specification
+
+# Local build output (rebuilt inside the image), except precompiled runner
+# tracer classes needed by the sandbox image (sandbox/Dockerfile)
+out/*
+!out/runner
+*.class
+
+# Docs not needed at runtime
+docs/
+README.md
+.dockerignore
+Dockerfile

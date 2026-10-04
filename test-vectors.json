@@ -1,0 +1,11 @@
+[
+  {"signature": "compare:lt", "hash": "6b567692", "noteIndex": 1, "midiNote": 60, "frequencyHz": 261.625565, "oscillator": "square", "durationMs": 300},
+  {"signature": "compare:eq", "hash": "7c6c57a4", "noteIndex": 5, "midiNote": 69, "frequencyHz": 440.000000, "oscillator": "sine", "durationMs": 150},
+  {"signature": "branch:for-loop", "hash": "b7ed16a5", "noteIndex": 0, "midiNote": 57, "frequencyHz": 220.000000, "oscillator": "triangle", "durationMs": 300},
+  {"signature": "branch:while-loop", "hash": "e0f15d6f", "noteIndex": 6, "midiNote": 72, "frequencyHz": 523.251131, "oscillator": "triangle", "durationMs": 150},
+  {"signature": "assignment", "hash": "0ab739f0", "noteIndex": 4, "midiNote": 67, "frequencyHz": 391.995436, "oscillator": "sawtooth", "durationMs": 250},
+  {"signature": "swap", "hash": "64ed874e", "noteIndex": 2, "midiNote": 62, "frequencyHz": 293.664768, "oscillator": "triangle", "durationMs": 150},
+  {"signature": "call", "hash": "b3f184a9", "noteIndex": 0, "midiNote": 57, "frequencyHz": 220.000000, "oscillator": "triangle", "durationMs": 300},
+  {"signature": "return", "hash": "85ee37bf", "noteIndex": 5, "midiNote": 69, "frequencyHz": 440.000000, "oscillator": "square", "durationMs": 200},
+  {"signature": "access:cross-file", "hash": "806661e2", "noteIndex": 1, "midiNote": 60, "frequencyHz": 261.625565, "oscillator": "square", "durationMs": 150}
+]
