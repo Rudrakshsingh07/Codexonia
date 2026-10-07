@@ -48,13 +48,11 @@
 <div class="w-full rounded-xl bg-surface-container-lowest shadow-sm flex flex-col overflow-hidden">
 <!-- File Tabs & Editor Controls -->
 <div class="flex items-center justify-between px-space-md pt-space-xs bg-surface-container-high">
-<div class="flex items-end gap-1">
-<div class="flex items-center gap-space-xs px-space-md py-1.5 rounded-t-lg bg-surface-container-lowest text-on-surface shadow-sm font-label-code-sm text-label-code-sm font-medium transition-all">
-<span class="material-symbols-outlined text-[15px] text-primary">description</span>
-<span>Sample.java</span>
-<span class="px-1 py-0.2 rounded bg-primary-fixed text-on-primary-fixed font-label-caps text-label-caps scale-90">MAIN</span>
-</div>
-</div>
+<div class="flex items-end gap-1" id="file-tabs"></div>
+<button id="add-file-btn" class="flex items-center gap-0.5 px-space-sm py-1.5 rounded-t-lg text-on-surface-variant hover:text-primary hover:bg-surface-container transition-all" title="New file">
+<span class="material-symbols-outlined text-[16px]">add</span>
+<span class="font-label-caps text-label-caps">Add File</span>
+</button>
 
 </div>
 <div class="flex items-center gap-space-xs pb-1 text-on-surface-variant">
@@ -165,6 +163,50 @@ const themeBtn = document.getElementById('theme-toggle');
 if (themeBtn) themeBtn.addEventListener('click', () => { dark = !dark; applyTheme(); });
 
 
+// ---------- Multi-file model ----------
+function escapeHtml(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+const files = [{name: 'Sample.java', source: DEFAULT_SOURCE}];
+let activeFile = 0;
+const fileTabsEl = document.getElementById('file-tabs');
+
+function renderTabs() {
+  fileTabsEl.innerHTML = files.map((f, i) =>
+    `<div data-idx="${i}" class="file-tab cursor-pointer group flex items-center gap-space-xs px-space-md py-1.5 rounded-t-lg ${i === activeFile ? 'bg-surface-container-lowest text-on-surface shadow-sm font-medium' : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container'} text-label-code-sm font-label-code-sm transition-all">
+<span class="material-symbols-outlined text-[15px] ${i === activeFile ? 'text-primary' : 'text-on-surface-variant'}">description</span>
+<span>${escapeHtml(f.name)}</span>
+${files.length > 1 ? `<button class="close-file ml-1 p-0.5 rounded hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface" data-idx="${i}"><span class="material-symbols-outlined text-[13px]">close</span></button>` : ''}
+</div>`).join('');
+  fileTabsEl.querySelectorAll('.file-tab').forEach(t => t.addEventListener('click', (ev) => {
+    if (ev.target.closest('.close-file')) return;
+    files[activeFile].source = editor.getValue();
+    activeFile = parseInt(t.dataset.idx, 10);
+    editor.setValue(files[activeFile].source);
+    renderTabs();
+  }));
+  fileTabsEl.querySelectorAll('.close-file').forEach(b => b.addEventListener('click', (ev) => {
+    ev.stopPropagation();
+    const idx = parseInt(b.dataset.idx, 10);
+    files[activeFile].source = editor.getValue();
+    files.splice(idx, 1);
+    activeFile = Math.max(0, activeFile - (idx <= activeFile ? 1 : 0));
+    editor.setValue(files[activeFile].source);
+    renderTabs();
+  }));
+}
+renderTabs();
+
+document.getElementById('add-file-btn').addEventListener('click', () => {
+  const name = prompt('New file name (.java):', 'Helper.java');
+  if (!name) return;
+  files[activeFile].source = editor.getValue();
+  files.push({name: name.endsWith('.java') ? name : name + '.java', source: ''});
+  activeFile = files.length - 1;
+  editor.setValue('');
+  renderTabs();
+});
+
 document.getElementById('run-btn').addEventListener('click', async () => {
   const btn = document.getElementById('run-btn');
   const panel = document.getElementById('compiler-error-panel');
@@ -175,7 +217,7 @@ document.getElementById('run-btn').addEventListener('click', async () => {
     const res = await fetch('/api/run', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({source: editor.getValue()})
+      body: JSON.stringify({files: files.map((f, i) => ({fileName: f.name, source: i === activeFile ? editor.getValue() : f.source, isMainFile: /public\s+static\s+void\s+main/.test(i === activeFile ? editor.getValue() : f.source)}))})
     });
     const trace = await res.json();
     if (trace.status === 'COMPILE_ERROR' || trace.status === 'NO_MAIN_METHOD' || trace.status === 'NO_SOURCE') {
@@ -183,12 +225,18 @@ document.getElementById('run-btn').addEventListener('click', async () => {
       document.getElementById('error-body').textContent = trace.error_message || 'Compilation failed';
       panel.classList.remove('hidden');
     } else {
+      files[activeFile].source = editor.getValue();
       localStorage.setItem('codexonia-trace', JSON.stringify(trace));
-      localStorage.setItem('codexonia-source', editor.getValue());
+      const mainName = (trace.sources && trace.sources.find(x => x.is_main_file) || trace.sources && trace.sources[0] || {file_name: files[0].name}).file_name;
+      const mainFile = files.find(f => f.name === mainName) || files[0];
+      localStorage.setItem('codexonia-source', mainFile.source);
+      const sources = {};
+      files.forEach(f => sources[f.name] = f.source);
+      localStorage.setItem('codexonia-sources', JSON.stringify(sources));
       // Recent runs history
       try {
         const runs = JSON.parse(localStorage.getItem('codexonia-runs') || '[]');
-        runs.unshift({ts: Date.now(), label: 'Java run', status: trace.status, trace: trace, source: editor.getValue()});
+        runs.unshift({ts: Date.now(), label: mainName, status: trace.status, trace: trace, source: mainFile.source, sources: sources});
         localStorage.setItem('codexonia-runs', JSON.stringify(runs.slice(0, 5)));
       } catch (e) {}
       showToast('Trace captured: ' + (trace.event_count || 0) + ' events');
@@ -244,6 +292,7 @@ function showToast(msg) {
     const r = runs[parseInt(b.dataset.idx, 10)];
     localStorage.setItem('codexonia-trace', JSON.stringify(r.trace));
     localStorage.setItem('codexonia-source', r.source);
+    localStorage.setItem('codexonia-sources', JSON.stringify(r.sources || {'main': r.source}));
     window.location.href = '/visualizer.html';
   }));
 })();

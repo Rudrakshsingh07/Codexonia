@@ -185,6 +185,9 @@
 // ---------- Trace playback engine ----------
 const traceRaw = localStorage.getItem('codexonia-trace');
 const sourceRaw = localStorage.getItem('codexonia-source') || '';
+const sourcesRaw = localStorage.getItem('codexonia-sources');
+let sources = {};
+try { sources = sourcesRaw ? JSON.parse(sourcesRaw) : {}; } catch (e) {}
 const codeView = document.getElementById('code-view');
 const callStackEl = document.getElementById('call-stack');
 const stdoutView = document.getElementById('stdout-view');
@@ -230,11 +233,17 @@ function escapeHtml(s) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
+function sourceFor(file) {
+  if (file && sources[file] != null) return sources[file];
+  return sourceRaw;
+}
+
 // Build code lines
 function renderCode() {
   const cur = events[cursor];
   const activeLine = cur && cur.file ? cur.line : -1;
-  const srcLines = sourceRaw.split('\n');
+  if (cur && cur.file && fileTabName) fileTabName.textContent = cur.file;
+  const srcLines = sourceFor(cur && cur.file).split('\n');
   let html = '';
   srcLines.forEach((line, idx) => {
     const n = idx + 1;
