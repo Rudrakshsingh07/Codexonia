@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Analyze — StepSonic</title>
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <div class="brand"><span class="dot"></span> StepSonic</div>
+    <nav class="site-nav">
+      <a href="index.html">Home</a>
+      <a href="analyze.html" class="active">Analyze</a>
+      <a href="visualize.html">Visualize</a>
+    </nav>
+    <div class="status-dot" id="backendStatus"><span class="dot"></span> <span id="statusText">Checking backend…</span></div>
+  </div>
+</header>
+
+<main class="page">
+  <h2 style="margin-top:0;">Analyze Algorithm</h2>
+
+  <div class="banner error" id="errorBanner"></div>
+
+  <div class="analyze-grid">
+    <div class="card">
+      <div class="field">
+        <label for="codeInput">Java code</label>
+        <textarea id="codeInput" placeholder="Paste the code here"></textarea>
+      </div>
+      <div class="field">
+        <label for="fileInput">…or upload a .java file</label>
+        <input type="file" id="fileInput" accept=".java,.txt">
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="field">
+        <label for="algoSelect">Algorithm type</label>
+        <select id="algoSelect">
+          <option value="bubble_sort">Bubble Sort</option>
+          <option value="selection_sort">Selection Sort</option>
+          <option value="insertion_sort">Insertion Sort</option>
+          <option value="merge_sort">Merge Sort</option>
+          <option value="quick_sort">Quick Sort</option>
+          <option value="binary_search">Binary Search</option>
+          <option value="custom">Custom / Other</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="arrayInput">Input array (comma-separated)</label>
+        <input type="text" id="arrayInput" placeholder="5, 2, 9, 1, 7">
+      </div>
+      <button class="btn btn-primary" id="analyzeBtn" style="width:100%;" onclick="runAnalysis()">
+        Analyze &amp; Sonify
+      </button>
+    </div>
+  </div>
+</main>
+
+<script src="js/api.js"></script>
+<script src="js/analyze.js"></script>
+</body>
+</html>

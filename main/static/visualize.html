@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Visualize — StepSonic</title>
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <div class="brand"><span class="dot"></span> StepSonic</div>
+    <nav class="site-nav">
+      <a href="index.html">Home</a>
+      <a href="analyze.html">Analyze</a>
+      <a href="visualize.html" class="active">Visualize</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <h2 style="margin-top:0;">Visualize</h2>
+
+  <div id="emptyState" class="empty-state" style="display:none;">
+    <p>No analysis loaded yet.</p>
+    <a href="analyze.html" class="btn btn-primary">Go to Analyze</a>
+  </div>
+
+  <div id="vizContent">
+    <div class="bars" id="barsContainer"></div>
+
+    <div class="playback">
+      <button class="btn btn-secondary" id="playBtn">▶ Play</button>
+      <button class="btn btn-secondary" id="stepBackBtn">⏮ Step</button>
+      <button class="btn btn-secondary" id="stepFwdBtn">Step ⏭</button>
+      <label style="font-size:13px;">Speed
+        <input type="range" id="speedSlider" min="0.5" max="4" step="0.5" value="1">
+        <span id="speedVal">1x</span>
+      </label>
+      <span style="font-size:13px; color:var(--on-surface-variant);">
+        Step <span id="stepPos">0</span> / <span id="stepTotal">0</span>
+      </span>
+    </div>
+
+    <div class="card">
+      <table class="steps">
+        <thead>
+          <tr><th>Step #</th><th>Type</th><th>Line</th><th>Snippet</th><th>Frequency (Hz)</th></tr>
+        </thead>
+        <tbody id="stepsTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<script src="js/audio.js"></script>
+<script src="js/visualize.js"></script>
+</body>
+</html>
