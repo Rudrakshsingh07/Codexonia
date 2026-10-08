@@ -1,0 +1,167 @@
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.SourceDataLine;
+
+/**
+ * ToneGenerator - turns tone parameters (frequency, oscillator type, duration)
+ * produced by HashFunction into PCM audio and sends it to the speakers.
+ *
+ * Pipeline:  signature -> HashFunction -> Tone -> synthesize() -> play() -> speakers
+ *
+ * Audio format: 44.1 kHz, 16-bit signed, mono, little-endian.
+ */
+class ToneGenerator {
+
+    public static final float SAMPLE_RATE = 44100f;
+    private static final double AMPLITUDE   = 0.30;  // 0..1, kept low to protect ears/speakers
+    private static final double ATTACK_MS   = 5.0;   // fade-in  (prevents click at start)
+    private static final double RELEASE_MS  = 30.0;  // fade-out (prevents click at end)
+
+    /** Oscillator types, same order/names as the HashFunction manual (oscIndex 0..3). */
+    public enum Oscillator {
+        SINE, TRIANGLE, SQUARE, SAWTOOTH;
+
+        public static Oscillator fromName(String name) {
+            return valueOf(name.trim().toUpperCase());
+        }
+        public static Oscillator fromIndex(int i) {
+            return values()[i];
+        }
+    }
+
+    /** The values handed over by the hash function. */
+    public static final class Tone {
+        public final double frequencyHz;
+        public final Oscillator oscillator;
+        public final int durationMs;
+
+        public Tone(double frequencyHz, Oscillator oscillator, int durationMs) {
+            if (frequencyHz <= 0 || frequencyHz >= SAMPLE_RATE / 2)
+                throw new IllegalArgumentException("frequency out of range: " + frequencyHz);
+            if (durationMs <= 0)
+                throw new IllegalArgumentException("duration must be > 0");
+            this.frequencyHz = frequencyHz;
+            this.oscillator = oscillator;
+            this.durationMs = durationMs;
+        }
+        @Override public String toString() {
+            return String.format("%.6f Hz, %s, %d ms", frequencyHz, oscillator, durationMs);
+        }
+    }
+
+    private final AudioFormat format = new AudioFormat(SAMPLE_RATE, 16, 1, true, false);
+    private SourceDataLine line;
+
+    /** Opens the speaker line. Call once before play(). */
+    public void open() throws LineUnavailableException {
+        line = AudioSystem.getSourceDataLine(format);
+        line.open(format);
+        line.start();
+    }
+
+    /** Releases the speaker line. */
+    public void close() {
+        if (line != null) {
+            line.drain();
+            line.close();
+            line = null;
+        }
+    }
+
+    /** Plays one tone and blocks until it has finished. */
+    public void play(Tone tone) {
+        if (line == null) throw new IllegalStateException("call open() first");
+        byte[] pcm = synthesize(tone);
+        line.write(pcm, 0, pcm.length);
+        line.drain(); // wait until the sound has actually left the speakers
+    }
+
+    /** Generates the raw 16-bit PCM bytes for a tone (no audio hardware needed). */
+    public static byte[] synthesize(Tone tone) {
+        int total   = (int) Math.round(SAMPLE_RATE * tone.durationMs / 1000.0);
+        int attack  = (int) (SAMPLE_RATE * ATTACK_MS  / 1000.0);
+        int release = (int) (SAMPLE_RATE * RELEASE_MS / 1000.0);
+        byte[] out  = new byte[total * 2];
+
+        double phase = 0.0;                              // 0..1, one cycle
+        double step  = tone.frequencyHz / SAMPLE_RATE;   // phase advance per sample
+
+        for (int i = 0; i < total; i++) {
+            double s = wave(tone.oscillator, phase) * AMPLITUDE;
+
+            // envelope: linear fade in / fade out
+            double env = 1.0;
+            if (i < attack)             env = (double) i / attack;
+            else if (i >= total - release) env = (double) (total - i) / release;
+            s *= env;
+
+            short v = (short) Math.round(s * Short.MAX_VALUE);
+            out[2 * i]     = (byte) (v & 0xFF);          // little-endian
+            out[2 * i + 1] = (byte) ((v >> 8) & 0xFF);
+
+            phase += step;
+            if (phase >= 1.0) phase -= 1.0;
+        }
+        return out;
+    }
+
+    /** One sample of the waveform at phase p in [0,1). Output range -1..1. */
+    private static double wave(Oscillator type, double p) {
+        switch (type) {
+            case SINE:     return Math.sin(2 * Math.PI * p);
+            case TRIANGLE: return 4.0 * Math.abs(p - 0.5) - 1.0;
+            case SQUARE:   return p < 0.5 ? 1.0 : -1.0;
+            case SAWTOOTH: return 2.0 * p - 1.0;
+            default:       throw new IllegalStateException();
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // Demo / glue code. Replace hashToTone() with a call to your teammate's
+    // HashFunction class if it already exposes the tone parameters.
+    // This version follows the manual exactly so the file runs standalone.
+    // ------------------------------------------------------------------
+    private static final double[] FREQ = {
+        220.000000, 261.625565, 293.664768, 329.627557,
+        391.995436, 440.000000, 523.251131
+    };
+
+    static int fnv1a(String sig) {
+        int hash = 0x811c9dc5;
+        for (int i = 0; i < sig.length(); i++) {
+            if (sig.charAt(i) > 0x7F) throw new IllegalArgumentException("ASCII only");
+            hash ^= sig.charAt(i);
+            hash *= 0x01000193;
+        }
+        return hash;
+    }
+
+    static Tone hashToTone(String signature) {
+        long u = fnv1a(signature) & 0xFFFFFFFFL;        // treat as unsigned
+        int noteIndex = (int) (u % 7);
+        int oscIndex  = (int) ((u >>> 16) % 4);
+        int duration  = 150 + (int) ((u >>> 24) % 4) * 50;
+        return new Tone(FREQ[noteIndex], Oscillator.fromIndex(oscIndex), duration);
+    }
+
+    public static void main(String[] args) throws Exception {
+        String[] signatures = args.length > 0 ? args : new String[] {
+            "compare:lt", "compare:eq", "branch:for-loop", "swap",
+            "assignment", "call", "return", "access:cross-file"
+        };
+
+        ToneGenerator gen = new ToneGenerator();
+        gen.open();
+        try {
+            for (String raw : signatures) {
+                String sig = raw.trim().toLowerCase();  // normalize as per manual
+                Tone t = hashToTone(sig);
+                System.out.printf("%-18s hash=%08x  ->  %s%n", sig, fnv1a(sig), t);
+                gen.play(t);
+            }
+        } finally {
+            gen.close();
+        }
+    }
+}
