@@ -35,6 +35,8 @@ services:
       - ${DOCKER_SOCKET:-/var/run/docker.sock}:/var/run/docker.sock
       - codexonia-jobs:/var/lib/codexonia/jobs
     restart: unless-stopped
+    security_opt:
+      - label=disable
 
 volumes:
   codexonia-jobs:
