@@ -3,6 +3,16 @@
 A web application that compiles, runs, and traces working Java code inside a
 sandboxed backend, returning a structured execution trace.
 
+## Running
+
+1. Install [Docker](https://docs.docker.com/get-docker/) (Docker Desktop on Windows/Mac) and make sure it is running.
+2. From the project folder, run:
+   - Windows: `run.cmd`
+   - Linux / Mac: `./run.sh`
+   - Any OS: `docker compose up --build`
+3. Open http://localhost:8080/
+
+
 ## Pages
 
 | Route | Page |
