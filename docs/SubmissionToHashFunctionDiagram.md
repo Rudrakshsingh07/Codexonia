@@ -203,9 +203,10 @@ always yields the same tone (PRD FR14), and the tones replay in lock-step with
 the timeline frames.
 
 `docs/HashFunctionManual.md` and `test-vectors.json` are the cross-language
-contract the audio layer must reproduce exactly. The backend image's default
-`CMD` verifies those vectors against `HashFunction.java`; see the root
-`Dockerfile` and the manual's "Verification" section for the reference commands.
+contract the audio layer must reproduce exactly. The archived hash-verification
+image's default `CMD` verified those vectors against `HashFunction.java`; see
+`archive/README.md` and the manual's "Verification" section for the reference
+commands.
 
 ## Regenerating the rendered graph
 

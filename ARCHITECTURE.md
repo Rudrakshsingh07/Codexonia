@@ -98,7 +98,7 @@ src/test/java/
   ErrorPageIntegrationTest.java  Live-server HTML 404 and JSON error checks
   visualizer/TimelineBuilderTest.java  Frame replay, labels, layout, tones, caps
 sandbox/Dockerfile            Job sandbox image (tracer classes baked in, non-root)
-Dockerfile                    Backend image; default CMD verifies hash test vectors
+archive/README.md             Archived root Dockerfile (hash-vector verification image)
 examples/Sample.java          Example submission used by SelfTest / manual runs
 docs/                         Developer manuals (HashFunctionManual.md,
                               RunnerEngineManual.md, JavaVisualizerPlan.md)

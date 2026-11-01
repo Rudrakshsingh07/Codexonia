@@ -47,6 +47,7 @@ src/test/java/            Controller/route tests, timeline-builder tests, and a
                           live-server error-page test
 docs/                     Developer-facing docs (HashFunctionManual.md,
                           RunnerEngineManual.md, JavaVisualizerPlan.md)
+archive/                  Archived files and restore notes (compressed archives are git-ignored)
 Project Specification/    PRD, SRS, and ADR log
 Diagrams/                 UML / sequence / use-case diagrams, plus
                           Code-to-HashFunction-Dataflow.* (submission → trace + timeline → tone)
@@ -126,9 +127,11 @@ frame replay, labels, array geometry, tone signatures, and empty/error timelines
 `ErrorPageIntegrationTest` starts a real servlet container and verifies the
 custom HTML `404` page and JSON error responses.
 
-## Docker
+## Archived Docker verification image
 
-```bash
-docker build -t codexonia .
-docker run --rm codexonia
-```
+The old root `Dockerfile` was only a hash-vector verification image, not the web
+app image. It has been archived. See `archive/README.md` for its full contents,
+purpose, and restore instructions.
+
+The active sandbox image is still built from `sandbox/Dockerfile` as described
+in the runner quick start above.
