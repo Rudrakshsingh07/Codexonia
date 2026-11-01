@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About — Codexonia</title>
+  <meta name="description" content="Codexonia is a flight recorder for Java: a sandboxed tracer, a versioned event contract, and a browser interface built for understanding execution.">
+  <meta name="theme-color" content="#0059b5">
+  <link rel="icon" href="/assets/codexonia-mark.svg" type="image/svg+xml">
+  <link rel="preload" href="/assets/fonts/material-symbols-outlined.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/jetbrains-mono-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <script src="/assets/theme-init.js"></script>
+  <link rel="stylesheet" href="/assets/fonts.css">
+  <link rel="stylesheet" href="/assets/tailwind.css">
+  <link rel="stylesheet" href="/assets/site.css">
+  <link rel="stylesheet" href="/assets/content.css">
+</head>
+<body data-page="about" class="bg-surface font-body-md text-body-md text-on-surface antialiased min-h-screen flex flex-col">
+  <div id="site-header"></div>
+
+  <main class="flex-1 pt-16">
+    <section class="page-hero">
+      <div class="shell page-hero-inner">
+        <span class="eyebrow"><span class="pulse-dot"></span> About the project</span>
+        <h1>A flight recorder for Java.</h1>
+        <p>
+          Codexonia exists for the moment a program stops being obvious. It records
+          what the JVM actually did, preserves the order, and gives that evidence back
+          as something a student can inspect without a debugger setup.
+        </p>
+        <div class="page-hero-meta">
+          <span><span class="material-symbols-outlined">school</span> Built for CS students</span>
+          <span><span class="material-symbols-outlined">code</span> Java + Spring Boot</span>
+          <span><span class="material-symbols-outlined">science</span> Course project · v2.0</span>
+        </div>
+      </div>
+    </section>
+
+    <div class="shell page-body">
+      <div class="about-grid">
+        <div>
+          <div class="prose">
+            <h2 style="margin-top:0">Why this exists</h2>
+            <p>
+              Static code shows what could happen. A debugger shows what is happening,
+              but only while you are sitting in front of it. Codexonia keeps the run:
+              the calls, the assignments, the returns, and the output, all in one
+              ordered trace that can be replayed later.
+            </p>
+            <p>
+              The product is deliberately narrow. It is not an IDE, a grader, or a
+              general-purpose visual programming tool. It is a way to look at a working
+              Java program and ask: <strong>where did this value come from?</strong>
+            </p>
+            <h2>Design principles</h2>
+            <p>
+              Every design decision follows from the fact that a trace is evidence.
+              If the interface invents state, the evidence is gone.
+            </p>
+          </div>
+
+          <div class="about-principles mt-5">
+            <div class="principle">
+              <div class="principle-icon"><span class="material-symbols-outlined">fact_check</span></div>
+              <div>
+                <h3>Evidence over narration</h3>
+                <p>The player reads from recorded events. It does not guess what the program probably did.</p>
+              </div>
+            </div>
+            <div class="principle">
+              <div class="principle-icon"><span class="material-symbols-outlined">graphic_eq</span></div>
+              <div>
+                <h3>Deterministic by construction</h3>
+                <p>A tone is derived from an event signature with a fixed hash. The same event always sounds the same.</p>
+              </div>
+            </div>
+            <div class="principle">
+              <div class="principle-icon"><span class="material-symbols-outlined">shield_lock</span></div>
+              <div>
+                <h3>Ephemeral by default</h3>
+                <p>No accounts, no saved student database. A submission exists to produce a run, then it is gone.</p>
+              </div>
+            </div>
+            <div class="principle">
+              <div class="principle-icon"><span class="material-symbols-outlined">open_in_browser</span></div>
+              <div>
+                <h3>Link-and-go</h3>
+                <p>No JDK install, no desktop client, no local setup. The browser is the delivery surface.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="architecture" aria-label="Codexonia architecture at a glance">
+            <div class="arch-row is-accent">
+              <span class="material-symbols-outlined">web</span>
+              <div><strong>Browser</strong><span>static HTML · editor · trace rendering</span></div>
+            </div>
+            <div class="arch-arrow"><span class="material-symbols-outlined">arrow_downward</span></div>
+            <div class="arch-row">
+              <span class="material-symbols-outlined">api</span>
+              <div><strong>Spring Boot controller</strong><span>POST /api/run · input validation</span></div>
+            </div>
+            <div class="arch-arrow"><span class="material-symbols-outlined">arrow_downward</span></div>
+            <div class="arch-row">
+              <span class="material-symbols-outlined">inventory_2</span>
+              <div><strong>Docker sandbox</strong><span>no network · read-only · resource capped</span></div>
+            </div>
+            <div class="arch-arrow"><span class="material-symbols-outlined">arrow_downward</span></div>
+            <div class="arch-row">
+              <span class="material-symbols-outlined">bug_report</span>
+              <div><strong>JDI tracer</strong><span>calls · assignments · returns</span></div>
+            </div>
+            <div class="arch-arrow"><span class="material-symbols-outlined">arrow_downward</span></div>
+            <div class="arch-row is-accent">
+              <span class="material-symbols-outlined">data_object</span>
+              <div><strong>Versioned trace</strong><span>schema v1 · ordered events · stdout</span></div>
+            </div>
+          </div>
+
+          <div class="roadmap" aria-label="Project roadmap">
+            <div class="roadmap-item is-done">
+              <h3>Trace engine</h3>
+              <p>Sandboxed execution, JDI instrumentation, event serialization, classified failures.</p>
+            </div>
+            <div class="roadmap-item is-done">
+              <h3>Web shell</h3>
+              <p>Landing page, editor, field guide, privacy note, and shared design system.</p>
+            </div>
+            <div class="roadmap-item is-next">
+              <h3>Java timeline player <span class="roadmap-badge">Next</span></h3>
+              <p>Scene computation, labels, layout, and animation hints generated in Java; rendered in the browser.</p>
+            </div>
+            <div class="roadmap-item">
+              <h3>Data structures and multi-file connectors</h3>
+              <p>Array cells first, then lists and trees, with cross-file access lines when the tracer exposes them.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="prose mt-10">
+        <h2>Built with</h2>
+        <div class="split-cards">
+          <div class="mini-card">
+            <h3>Backend</h3>
+            <p>Java 26, Spring Boot 4, Maven, the Java Debug Interface, and a hardened Docker run.</p>
+          </div>
+          <div class="mini-card">
+            <h3>Frontend</h3>
+            <p>Static HTML, Tailwind utility styles, vanilla JavaScript, CodeMirror, and browser-native Web Audio when the player lands.</p>
+          </div>
+        </div>
+        <p>
+          The trace schema is the stable boundary between execution and presentation.
+          It is versioned so the tracer, the player, and future clients can evolve
+          without pretending the contract did not change.
+        </p>
+      </div>
+
+      <div class="contact-band">
+        <div>
+          <h2>Start with a program you already understand.</h2>
+          <p>Then step through it and find the line you missed.</p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <a class="btn btn-primary" href="/submit">Open the editor</a>
+          <a class="btn btn-secondary" href="/docs">Read the field guide</a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div id="site-footer"></div>
+  <script src="/assets/site.js" defer></script>
+</body>
+</html>

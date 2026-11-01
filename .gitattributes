@@ -1,0 +1,5 @@
+run.cmd text eol=lf
+run.sh text eol=lf
+*.sh text eol=lf
+Dockerfile text eol=lf
+sandbox/Dockerfile text eol=lf

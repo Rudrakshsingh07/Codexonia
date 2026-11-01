@@ -1,6 +1,7 @@
 package runner;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -15,6 +16,8 @@ import java.util.concurrent.TimeUnit;
 
 /** Starts a hardened Docker container per job and tears it down (or kills it on timeout). */
 public final class DockerSandbox {
+
+    private static final String CONTAINER_WORKSPACE = "/workspace";
 
     public static final class SandboxRun {
         public final String status;
@@ -37,9 +40,18 @@ public final class DockerSandbox {
     }
 
     private final LimitPolicy policy;
+    private final Path jobsRoot;
+    private final String dockerVolume;
 
     public DockerSandbox(LimitPolicy policy) {
+        this(policy, SandboxConfig.jobsRoot(), SandboxConfig.dockerVolume());
+    }
+
+    DockerSandbox(LimitPolicy policy, Path jobsRoot, String dockerVolume) {
         this.policy = policy;
+        this.jobsRoot = jobsRoot.toAbsolutePath().normalize();
+        String volume = dockerVolume == null ? null : dockerVolume.trim();
+        this.dockerVolume = volume == null || volume.isEmpty() ? null : volume;
     }
 
     public boolean imagePresent() {
@@ -58,31 +70,17 @@ public final class DockerSandbox {
         if (!imagePresent()) {
             return new SandboxRun("SANDBOX_ERROR", -1, "", "",
                     "Sandbox image '" + policy.image + "' not found.\n"
-                            + "Build it from the repo root:\n"
+                            + "Start the containerized stack with:\n"
+                            + "  docker compose up --build\n"
+                            + "or build the sandbox image from the repo root:\n"
                             + "  docker build -t " + policy.image + " -f sandbox/Dockerfile .");
         }
+        String mountProblem = mountProblem(workspace);
+        if (mountProblem != null) {
+            return new SandboxRun("SANDBOX_ERROR", -1, "", "", mountProblem);
+        }
         String name = "codexonia-job-" + UUID.randomUUID();
-        List<String> cmd = new ArrayList<>(Arrays.asList(
-                "docker", "run", "--rm", "--name", name,
-                "--network", "none",
-                "--memory", policy.memoryMb + "m",
-                "--cpus", String.valueOf(policy.cpus),
-                "--pids-limit", String.valueOf(policy.maxProcesses),
-                "--read-only",
-                "--tmpfs", "/tmp:rw,size=" + policy.tmpfsMb + "m",
-                "--cap-drop", "ALL",
-                "--security-opt", "no-new-privileges",
-                "--init",
-                "-w", "/workspace",
-                "-v", workspace.toAbsolutePath() + ":/workspace:Z"));
-        cmd.add(policy.image);
-        cmd.add("/workspace/src");
-        cmd.add("/workspace/classes");
-        cmd.add("/workspace/trace.jsonl");
-        cmd.add("/workspace/run-result.json");
-        cmd.add(mainClass);
-        cmd.add(String.valueOf(policy.maxEvents));
-        cmd.add(String.valueOf(policy.wallTimeoutSeconds));
+        List<String> cmd = dockerCommand(workspace, name, mainClass);
 
         Process process = new ProcessBuilder(cmd).redirectErrorStream(true).start();
         ByteArrayOutputStream dockerOut = new ByteArrayOutputStream();
@@ -137,6 +135,64 @@ public final class DockerSandbox {
             return new SandboxRun("INTERNAL_ERROR", code, dockerOut.toString(StandardCharsets.UTF_8), "",
                     "Malformed run-result.json: " + e.getMessage());
         }
+    }
+
+    /**
+     * Builds the hardened {@code docker run} invocation. Kept package-private so tests
+     * can verify both the mount strategy and the security flags without Docker.
+     */
+    List<String> dockerCommand(Path workspace, String name, String mainClass) {
+        Path ws = workspace.toAbsolutePath().normalize();
+        List<String> cmd = new ArrayList<>(Arrays.asList(
+                "docker", "run", "--rm", "--name", name,
+                "--network", "none",
+                "--memory", policy.memoryMb + "m",
+                "--cpus", String.valueOf(policy.cpus),
+                "--pids-limit", String.valueOf(policy.maxProcesses),
+                "--read-only",
+                "--tmpfs", "/tmp:rw,size=" + policy.tmpfsMb + "m",
+                "--cap-drop", "ALL",
+                "--security-opt", "no-new-privileges",
+                "--init",
+                "-w", CONTAINER_WORKSPACE));
+        if (dockerVolume != null) {
+            cmd.add("--mount");
+            cmd.add("type=volume,source=" + dockerVolume
+                    + ",target=" + CONTAINER_WORKSPACE
+                    + ",volume-subpath=" + volumeSubpath(ws));
+        } else {
+            cmd.add("-v");
+            cmd.add(ws + ":" + CONTAINER_WORKSPACE + ":Z");
+        }
+        cmd.add(policy.image);
+        cmd.add(CONTAINER_WORKSPACE + "/src");
+        cmd.add(CONTAINER_WORKSPACE + "/classes");
+        cmd.add(CONTAINER_WORKSPACE + "/trace.jsonl");
+        cmd.add(CONTAINER_WORKSPACE + "/run-result.json");
+        cmd.add(mainClass);
+        cmd.add(String.valueOf(policy.maxEvents));
+        cmd.add(String.valueOf(policy.wallTimeoutSeconds));
+        return cmd;
+    }
+
+    String mountProblem(Path workspace) {
+        if (dockerVolume == null) {
+            return null;
+        }
+        Path ws = workspace.toAbsolutePath().normalize();
+        if (ws.equals(jobsRoot) || !ws.startsWith(jobsRoot)) {
+            return "Job workspace " + ws + " is outside CODEXONIA_JOBS_DIR " + jobsRoot
+                    + "; it cannot be exposed through Docker volume '" + dockerVolume + "'.";
+        }
+        if (jobsRoot.relativize(ws).getNameCount() != 1) {
+            return "Job workspace " + ws + " must be a direct child of CODEXONIA_JOBS_DIR "
+                    + jobsRoot + " when CODEXONIA_DOCKER_VOLUME is set.";
+        }
+        return null;
+    }
+
+    private String volumeSubpath(Path workspace) {
+        return jobsRoot.relativize(workspace).toString().replace(File.separatorChar, '/');
     }
 
     private static String tail(String s, int max) {

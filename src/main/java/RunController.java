@@ -12,6 +12,10 @@ import runner.CodeSubmission;
 import runner.JavaSourceFile;
 import runner.RunnerEngine;
 import runner.RunOutcome;
+import runner.TraceSerializer;
+import visualizer.TimelineBuilder;
+import visualizer.ToneProvider;
+import visualizer.ToneSpec;
 
 @RestController
 public class RunController {
@@ -20,6 +24,16 @@ public class RunController {
             Pattern.compile("public\\s+class\\s+([A-Za-z_$][\\w$]*)");
     private static final Pattern MAIN =
             Pattern.compile("public\\s+static\\s+void\\s+main\\s*\\(");
+
+    /**
+     * The shared HashFunction is in the default package; inject its result into the
+     * framework-free visualizer core rather than duplicating the mapping there.
+     */
+    private static final ToneProvider TONES = signature -> {
+        HashFunction.ToneParameters tone = HashFunction.toneFor(signature);
+        return new ToneSpec(signature, tone.frequencyHz, tone.oscillator, tone.durationMs,
+                tone.noteIndex, tone.midiNote, HashFunction.hashHex(signature));
+    };
 
     public record FileDto(String fileName, String source, boolean isMainFile) {}
     public record RunRequest(String source, List<FileDto> files) {}
@@ -45,17 +59,15 @@ public class RunController {
                     .body("{\"status\":\"NO_SOURCE\",\"error_message\":\"No source provided\"}");
         }
         RunOutcome outcome = new RunnerEngine().run(submission);
-        if (outcome.traceJson != null) {
-            return ResponseEntity.ok(outcome.traceJson);
+        if (outcome.traceJson != null && !outcome.traceJson.isBlank()) {
+            String timeline = TimelineBuilder.build(submission, outcome.traceJson, TONES);
+            return ResponseEntity.ok(TimelineBuilder.attach(outcome.traceJson, timeline));
         }
-        return ResponseEntity.ok("{\"schema_version\":1,\"status\":\"" + outcome.status
-                + "\",\"error_message\":" + jsonQuote(outcome.errorMessage)
-                + ",\"event_count\":0,\"events\":[]}");
-    }
-
-    private static String jsonQuote(String s) {
-        if (s == null) return "null";
-        return "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"")
-                .replace("\n", "\\n") + "\"";
+        // Early validation failures (no main, limits, internal errors) still get a
+        // trace-shaped response so the report and timeline sources stay consistent.
+        String traceJson = TraceSerializer.toJson(submission, List.of(), "", outcome.status,
+                outcome.errorMessage);
+        String timeline = TimelineBuilder.build(submission, traceJson, TONES);
+        return ResponseEntity.ok(TimelineBuilder.attach(traceJson, timeline));
     }
 }

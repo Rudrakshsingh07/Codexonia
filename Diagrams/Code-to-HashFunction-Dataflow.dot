@@ -1,0 +1,130 @@
+digraph Codexonia {
+    rankdir=TB;
+    bgcolor="#faf8fe";
+    fontname="Helvetica";
+    labelloc="t";
+    label=<<b>Codexonia — from submitted Java to a replay timeline and HashFunction tone</b><br/><font point-size="10">Solid = implemented wiring · Dashed = contract / standalone prototype path</font>>;
+    node [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=10,
+          fillcolor="#ffffff", color="#c1c6d6", penwidth=1.2, margin="0.12,0.08"];
+    edge [fontname="Helvetica", fontsize=9, color="#717785", penwidth=1.1];
+
+    /* ---------------- Browser / UI ---------------- */
+    subgraph cluster_ui {
+        label=<<b>Browser (client)</b>>;
+        style="rounded,filled"; fillcolor="#eef4ff"; color="#abc7ff";
+        submit [label=<<b>Submit page</b><br/>Stitch/Submit-code-page.html<br/>src/main/resources/static/submit.html<br/><font point-size="9">editor · tabs · run &amp; trace</font>>, fillcolor="#d7e2ff"];
+        viz    [label=<<b>Timeline player</b><br/>src/main/resources/static/submit.html<br/><font point-size="9">paint frames · transport · Web Audio</font>>, fillcolor="#d7e2ff"];
+    }
+
+    /* ---------------- Spring web layer ---------------- */
+    subgraph cluster_web {
+        label=<<b>Spring Boot web layer</b>>;
+        style="rounded,filled"; fillcolor="#f1ecff"; color="#d0b3ff";
+        app    [label=<<b>CodexoniaApplication.java</b><br/><font point-size="9">boots Spring; registers the controllers</font>>, fillcolor="#e8d9ff"];
+        runctl [label=<<b>RunController.java</b><br/>POST /api/run<br/><font point-size="9">JSON -&gt; CodeSubmission; regex main/class sniff;<br/>attaches the timeline to the trace JSON</font>>, fillcolor="#e8d9ff"];
+        hashctl[label=<<b>HashController.java</b><br/>GET /hash?input=...<br/><font point-size="9">returns {signature, hash, tone}</font>>, fillcolor="#e8d9ff"];
+    }
+
+    /* ---------------- Runner engine (host) ---------------- */
+    subgraph cluster_engine {
+        label=<<b>Runner engine — package `runner` (host, ADR-1)</b>>;
+        style="rounded,filled"; fillcolor="#eafaf0"; color="#7fd39a";
+        submission [label=<<b>CodeSubmission.java</b> + <b>JavaSourceFile.java</b><br/><font point-size="9">immutable set of submitted .java files</font>>, fillcolor="#d6f5e0"];
+        engine [label=<<b>RunnerEngine.java</b><br/><font point-size="9">facade: validate -&gt; detect main -&gt; temp workspace -&gt; sandbox -&gt; parse trace</font>>, fillcolor="#d6f5e0"];
+        limits [label=<<b>LimitPolicy.java</b><br/><font point-size="9">mem/cpu/time/event/file bounds</font>>, fillcolor="#d6f5e0"];
+        maindet[label=<<b>MainClassDetector.java</b><br/><font point-size="9">finds public static void main -&gt; FQ class</font>>, fillcolor="#d6f5e0"];
+        sandbox[label=<<b>DockerSandbox.java</b><br/><font point-size="9">hardened `docker run`; mounts workspace; timeout/kill</font>>, fillcolor="#d6f5e0"];
+        outcome[label=<<b>RunOutcome.java</b><br/><font point-size="9">trace or classified failure</font>>, fillcolor="#d6f5e0"];
+    }
+
+    /* ---------------- Sandbox container ---------------- */
+    subgraph cluster_box {
+        label=<<b>Sandbox container — package `runner.tracer` (ADR-7 / Dockerfile)</b>>;
+        style="rounded,filled"; fillcolor="#fff5e6"; color="#f0b95e";
+        dockerfile [label=<<b>sandbox/Dockerfile</b><br/><font point-size="9">eclipse-temurin:26-jdk; non-root; entrypoint = TracerMain</font>>, fillcolor="#ffe4b8"];
+        tracer     [label=<<b>TracerMain.java</b><br/><font point-size="9">javac -g compile; launch JVM under JDI; class filters; watchdog; writes run-result.json</font>>, fillcolor="#ffe4b8"];
+        recorder   [label=<<b>TraceRecorder.java</b><br/><font point-size="9">JDI events -&gt; METHOD_CALL / ASSIGNMENT / METHOD_RETURN; event cap</font>>, fillcolor="#ffe4b8"];
+        formatter  [label=<<b>ValueFormatter.java</b><br/><font point-size="9">JDI values -&gt; deterministic strings</font>>, fillcolor="#ffe4b8"];
+        tracefile  [label=<<b>trace.jsonl</b> + <b>run-result.json</b><br/><font point-size="9">raw event lines + status/stdout/stderr</font>>, shape=note, fillcolor="#fff0c8"];
+    }
+
+    /* ---------------- Trace model / serialization ---------------- */
+    subgraph cluster_trace {
+        label=<<b>Trace model &amp; serialization (host)</b>>;
+        style="rounded,filled"; fillcolor="#fdeef6"; color="#e8a9d0";
+        event  [label=<<b>TraceEvent.java</b> + <b>EventType.java</b><br/><font point-size="9">one event; reserved future types</font>>, fillcolor="#fbd9ec"];
+        jsonp  [label=<<b>Json.java</b><br/><font point-size="9">tiny parser/escape used everywhere</font>>, fillcolor="#fbd9ec"];
+        serializer [label=<<b>TraceSerializer.java</b><br/><font point-size="9">versioned trace JSON (schema_version:1) + gzip</font>>, fillcolor="#fbd9ec"];
+        tracejson  [label=<<b>trace JSON</b><br/><font point-size="9">status · sources · stdout · events[] · optional error_message</font>>, shape=note, fillcolor="#fbd9ec"];
+    }
+
+    /* ---------------- Visualizer core ---------------- */
+    subgraph cluster_visualizer {
+        label=<<b>Visualizer core — package `visualizer` (pure Java)</b>>;
+        style="rounded,filled"; fillcolor="#eef7ff"; color="#8ec5ff";
+        timelinecore [label=<<b>TimelineBuilder.java</b><br/><font point-size="9">replay stack/variables/labels/arrays; stdout visibility;<br/>tone specs; animation hints; frame + byte caps</font>>, fillcolor="#d6ecff"];
+        timelinejson [label=<<b>timeline JSON</b><br/><font point-size="9">sources with content · frames[]:<br/>stack · variables · geometry · tone · animation</font>>, shape=note, fillcolor="#d6ecff"];
+    }
+
+    /* ---------------- Hash / sonification ---------------- */
+    subgraph cluster_hash {
+        label=<<b>Deterministic sonification (ADR-2)</b>>;
+        style="rounded,filled"; fillcolor="#e8fbfb"; color="#6fd0d0";
+        signature [label=<<b>event signature</b><br/><font point-size="9">normalized ASCII: "assignment", "call",<br/>"return", "compare:lt", "swap" ...</font>>, shape=note, fillcolor="#d3f5f5"];
+        hashfn    [label=<<b>HashFunction.java</b><br/><font point-size="9">fnv1a32 (FNV-1a 32-bit) -&gt; toneFor() -&gt; ToneParameters<br/>hashHex() for stable hex</font>>, fillcolor="#a8ecec"];
+        tone      [label=<<b>tone parameters</b><br/><font point-size="9">noteIndex · midiNote · frequencyHz ·<br/>oscillator · durationMs</font>>, shape=note, fillcolor="#d3f5f5"];
+        manual    [label=<<b>docs/HashFunctionManual.md</b><br/><b>test-vectors.json</b><br/><font point-size="9">cross-language contract for the browser audio layer</font>>, fillcolor="#d3f5f5"];
+        audio     [label=<<b>Browser Web Audio (implemented)</b><br/><font point-size="9">OscillatorNode.type / .frequency / stop time</font>>, fillcolor="#c9efef"];
+    }
+
+    /* ---------------- Edges: submission ---------------- */
+    submit -> runctl [label="1  POST /api/run {files[]}"];
+    runctl -> submission [label="2  build"];
+    submission -> engine [label="3"];
+    engine -> limits   [label="4a  enforce"];
+    engine -> maindet  [label="4b  entry point"];
+    engine -> sandbox  [label="5  run(workspace, mainClass)"];
+    dockerfile -> sandbox [label="image", style=dashed];
+
+    /* ---------------- Edges: inside sandbox ---------------- */
+    sandbox -> tracer [label="6  docker run (mount src,classes,trace)"];
+    tracer -> recorder  [label="7  JDI events"];
+    tracer -> formatter [style=dashed];
+    recorder -> formatter [label="format values"];
+    recorder -> tracefile [label="8  JSONL events"];
+    tracer  -> tracefile [label="8  run-result.json", style=dashed];
+
+    /* ---------------- Edges: back on host ---------------- */
+    tracefile -> sandbox [label="9  read results"];
+    sandbox -> engine [label="10  SandboxRun"];
+    tracefile -> jsonp [label="11  parse lines", style=dashed];
+    jsonp -> event [label="fromJson"];
+    event -> serializer [label="12"];
+    serializer -> tracejson [label="13"];
+    tracejson -> outcome [label="14"];
+    tracejson -> timelinecore [label="15  build timeline"];
+    timelinecore -> timelinejson [label="16"];
+    timelinejson -> runctl [label="17  attach to trace"];
+    outcome -> runctl [label="18  return trace"];
+    runctl -> viz [label="19  trace + timeline JSON"];
+
+    /* ---------------- Edges: to the tone ---------------- */
+    event -> signature [label="20  normalize event kind", style=dashed, color="#0a8f8f", fontcolor="#0a8f8f"];
+    signature -> hashfn [label="21  fnv1a32", color="#0a8f8f", fontcolor="#0a8f8f"];
+    hashfn -> tone [label="22  toneFor / hashHex", color="#0a8f8f", fontcolor="#0a8f8f"];
+    hashctl -> hashfn [label="GET /hash", color="#0a8f8f", fontcolor="#0a8f8f"];
+    manual -> hashfn [label="verifies", style=dashed, color="#0a8f8f", fontcolor="#0a8f8f"];
+    tone -> timelinecore [label="23  ToneProvider.toneFor", color="#0a8f8f", fontcolor="#0a8f8f"];
+    tone -> audio [label="24  schedule tone", color="#0a8f8f", fontcolor="#0a8f8f"];
+    audio -> viz [label="25  play tones in lock-step", color="#0a8f8f", fontcolor="#0a8f8f"];
+
+    /* Invisible spine: force the clusters into a top-to-bottom pipeline. */
+    edge [style=invis, weight=100, constraint=true];
+    submit  -> app;
+    app     -> engine;
+    engine  -> tracer;
+    tracer  -> tracefile;
+    tracefile -> event;
+    event   -> hashfn;
+    hashfn  -> tone;
+}

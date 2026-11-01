@@ -17,8 +17,9 @@ import java.util.List;
  */
 public class HashFunction {
 
-    public static final int FNV_OFFSET_BASIS = 0x811c9dc5;
-    public static final int FNV_PRIME = 0x01000193;
+    // FNV-1a 32-bit constants (per the FNV specification; see http://www.isthe.com/chongo/tech/comp/fnv/).
+    public static final int FNV_OFFSET_BASIS = 0x811c9dc5; // standard starting value
+    public static final int FNV_PRIME = 0x01000193;         // FNV prime used in multiplication
 
     /** Fixed A-minor pentatonic set as MIDI note numbers. */
     public static final int[] MIDI_NOTES = {57, 60, 62, 64, 67, 69, 72};
@@ -28,8 +29,13 @@ public class HashFunction {
         220.0, 261.625565, 293.664768, 329.627557, 391.995436, 440.0, 523.251131
     };
 
+    /** Web Audio oscillator types — the timbre dimension of a tone. */
     public static final String[] OSCILLATORS = {"sine", "triangle", "square", "sawtooth"};
 
+    /**
+     * Immutable bundle of everything needed to play one tone:
+     * which note (index + MIDI + Hz), which oscillator waveform, and how long.
+     */
     public static final class ToneParameters {
         public final int noteIndex;
         public final int midiNote;
@@ -37,6 +43,7 @@ public class HashFunction {
         public final String oscillator;
         public final int durationMs;
 
+        // Package-private: only HashFunction should construct these.
         ToneParameters(int noteIndex, int midiNote, double frequencyHz, String oscillator, int durationMs) {
             this.noteIndex = noteIndex;
             this.midiNote = midiNote;
@@ -45,6 +52,7 @@ public class HashFunction {
             this.durationMs = durationMs;
         }
 
+        // Serialize to a stable JSON shape for cross-language comparison.
         public String toJson() {
             return String.format(java.util.Locale.ROOT,
                     "{\"noteIndex\":%d,\"midiNote\":%d,\"frequencyHz\":%.6f,\"oscillator\":\"%s\",\"durationMs\":%d}",
@@ -62,6 +70,8 @@ public class HashFunction {
         if (signature == null) {
             throw new IllegalArgumentException("signature must not be null");
         }
+        // Reject anything outside ASCII so Java char (UTF-16 code units) == bytes
+        // the client-side port will hash, keeping results identical across languages.
         for (int i = 0; i < signature.length(); i++) {
             if (signature.charAt(i) > 0x7F) {
                 throw new IllegalArgumentException("signature must be ASCII: " + signature);
@@ -69,7 +79,7 @@ public class HashFunction {
         }
         int hash = FNV_OFFSET_BASIS;
         for (int i = 0; i < signature.length(); i++) {
-            hash ^= signature.charAt(i);
+            hash ^= signature.charAt(i);       // FNV-1a: XOR with the byte first...
             hash *= FNV_PRIME; // int wraps mod 2^32, matching Math.imul semantics
         }
         return hash;
@@ -78,14 +88,15 @@ public class HashFunction {
     /** Deterministically map a signature to tone parameters. */
     public static ToneParameters toneFor(String signature) {
         int hash = fnv1a32(signature);
-        long u = Integer.toUnsignedLong(hash);
-        int noteIndex = (int) (u % NOTE_HZ.length);
-        int oscIndex = (int) ((u >>> 16) % OSCILLATORS.length);
-        int durationMs = 150 + (int) ((u >>> 24) % 4) * 50;
+        long u = Integer.toUnsignedLong(hash); // treat the 32 bits as unsigned
+        int noteIndex = (int) (u % NOTE_HZ.length);          // low bits -> pitch
+        int oscIndex = (int) ((u >>> 16) % OSCILLATORS.length); // middle bits -> timbre
+        int durationMs = 150 + (int) ((u >>> 24) % 4) * 50;     // high bits -> duration (150/200/250/300)
         return new ToneParameters(noteIndex, MIDI_NOTES[noteIndex], NOTE_HZ[noteIndex],
                 OSCILLATORS[oscIndex], durationMs);
     }
 
+    /** Format the 32-bit hash as an 8-digit lowercase hex string (stable, zero-padded). */
     public static String hashHex(String signature) {
         return String.format("%08x", fnv1a32(signature));
     }
@@ -99,7 +110,7 @@ public class HashFunction {
                 signature, hashHex(signature), t.noteIndex, t.midiNote, t.frequencyHz, t.oscillator, t.durationMs);
     }
 
-    public static final java.util.List<String> VECTOR_SIGNATURES = java.util.Arrays.asList(
+    public static final List<String> VECTOR_SIGNATURES = java.util.Arrays.asList(
             "compare:lt", "compare:eq", "branch:for-loop", "branch:while-loop",
             "assignment", "swap", "call", "return", "access:cross-file");
 

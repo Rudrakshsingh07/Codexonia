@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Submit Java Code — Codexonia</title>
+  <meta name="description" content="Write or paste Java, run it inside a hardened sandbox, and capture a structured execution trace.">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0059b5">
+  <meta content="web_standard" name="shell-type">
+  <link rel="icon" href="/assets/codexonia-mark.svg" type="image/svg+xml">
+  <link rel="preload" href="/assets/fonts/material-symbols-outlined.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/jetbrains-mono-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <script src="/assets/theme-init.js"></script>
+  <link rel="stylesheet" href="/assets/fonts.css">
+  <link rel="stylesheet" href="/assets/tailwind.css">
+  <link rel="stylesheet" href="/assets/vendor/codemirror/codemirror.min.css">
+  <link rel="stylesheet" href="/assets/vendor/codemirror/theme/eclipse.min.css">
+  <link rel="stylesheet" href="/assets/vendor/codemirror/theme/dracula.min.css">
+  <link rel="stylesheet" href="/assets/site.css">
+  <link rel="stylesheet" href="/assets/submit.css">
+  <style>
+    html, body { margin: 0; padding: 0; }
+    body { overscroll-behavior: none; }
+    main > :first-child { margin-top: 0 !important; }
+    main > :last-child { margin-bottom: 0 !important; }
+    ::-webkit-scrollbar { display: none; }
+  </style>
+</head><body data-page="submit" class="bg-surface font-body-md text-body-md text-on-surface antialiased min-h-screen flex flex-col"><div id="site-header"></div>
+<div id="run-toast" class="hidden fixed bottom-6 right-6 z-50 max-w-sm px-space-md py-space-sm rounded-lg bg-inverse-surface text-inverse-on-surface font-body-sm text-body-sm shadow-lg"></div><main class="w-full flex-1 pt-16 bg-surface max-w-[1280px] mx-auto px-margin"><div class="flex flex-col w-full">
+<!-- Top Command & Action Bar -->
+<section class="w-full pb-space-lg">
+<div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-space-md p-space-md rounded-xl bg-surface-container-low shadow-sm">
+<div class="flex flex-wrap items-center gap-space-md">
+<div class="flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded-lg bg-primary-fixed flex items-center justify-center text-primary shadow-sm">
+<span class="material-symbols-outlined text-[19px]">code_blocks</span>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md font-semibold text-on-surface tracking-tight">New Java Code Trace</h1>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-space-sm shrink-0">
+
+
+<button id="run-btn" class="px-space-lg py-1.5 rounded-lg bg-primary-container hover:bg-primary text-on-primary font-body-sm text-body-sm font-medium flex items-center gap-space-xs shadow-md transition-all active:scale-95">
+<span class="material-symbols-outlined text-[18px]">play_circle</span>
+<span>Run &amp; trace</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Workspace: editor + timeline player -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter items-start">
+<!-- Left Column: Interactive Editor -->
+<div class="lg:col-span-6 flex flex-col gap-gutter min-w-0">
+<div class="w-full rounded-xl bg-surface-container-lowest shadow-sm flex flex-col overflow-hidden">
+<!-- File Tabs & Editor Controls -->
+<div class="flex items-center justify-between px-space-md pt-space-xs bg-surface-container-high">
+<div class="flex items-end gap-1" id="file-tabs"></div>
+<button id="add-file-btn" class="flex items-center gap-0.5 px-space-sm py-1.5 rounded-t-lg text-on-surface-variant hover:text-primary hover:bg-surface-container transition-all" title="New file">
+<span class="material-symbols-outlined text-[16px]">add</span>
+<span class="font-label-caps text-label-caps">Add File</span>
+</button>
+
+</div>
+<div class="flex items-center gap-space-xs px-space-md py-1 text-on-surface-variant">
+<span class="px-space-xs py-0.5 rounded bg-surface-container font-label-code-sm text-label-code-sm">Java 26</span>
+<button class="p-1 rounded hover:bg-surface-container text-on-surface-variant" title="Copy code" id="copy-btn">
+<span class="material-symbols-outlined text-[16px]">content_copy</span>
+</button>
+<button class="p-1 rounded hover:bg-surface-container text-on-surface-variant" title="Reset buffer" id="reset-btn">
+<span class="material-symbols-outlined text-[16px]">restart_alt</span>
+</button>
+</div>
+<!-- Code Mirror / Buffer Canvas -->
+<div class="relative w-full overflow-x-auto bg-surface-container-lowest p-space-md font-label-code-sm text-label-code-sm text-on-surface selection:bg-primary-fixed selection:text-on-primary-fixed">
+<div class="flex flex-col min-w-[520px]">
+<textarea id="code-editor" spellcheck="false"></textarea>
+<style>.CodeMirror{font-family:'JetBrains Mono',monospace!important;font-size:13px;line-height:18px;height:480px;background:transparent}.CodeMirror-gutters{background:transparent;border-right:1px solid #e3e2e7}</style>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Right Column: Java-authored timeline player -->
+<aside class="lg:col-span-6 flex flex-col gap-gutter min-w-0" aria-label="Execution player">
+<section class="player-shell">
+<div class="player-head">
+<div class="player-title">
+<span class="material-symbols-outlined">smart_display</span>
+<div>
+<h2>Trace player</h2>
+<p id="player-subtitle">Run the program to build a timeline.</p>
+</div>
+</div>
+<span class="trace-status" id="run-status">IDLE</span>
+</div>
+
+<div class="player-empty" id="run-empty">
+<span class="material-symbols-outlined">play_circle</span>
+<p>Run the program to capture a trace.</p>
+<span class="player-empty-meta">POST /api/run · one execution · frame-by-frame replay</span>
+</div>
+
+<div class="player-body hidden" id="run-report">
+<div class="player-screen">
+<div class="player-screen-head">
+<div class="player-file-tabs" id="player-file-tabs"></div>
+<span class="player-line-chip" id="player-line-chip">Line —</span>
+</div>
+<div class="player-code" id="player-code"></div>
+<div class="player-prompt">
+<span class="player-event-kind" id="player-event-kind">EVENT</span>
+<span class="player-prompt-label" id="player-label">—</span>
+<span class="player-frame-count" id="player-frame-count">0 / 0</span>
+</div>
+<div class="player-controls">
+<div class="player-transport">
+<button class="player-control" type="button" data-player="rewind" title="Rewind">
+<span class="material-symbols-outlined">first_page</span>
+</button>
+<button class="player-control" type="button" data-player="step-back" title="Step back">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<button class="player-control player-play" type="button" data-player="play" title="Play">
+<span class="material-symbols-outlined" id="player-play-icon">play_arrow</span>
+</button>
+<button class="player-control" type="button" data-player="step-forward" title="Step forward">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+<button class="player-control" type="button" data-player="end" title="Go to end">
+<span class="material-symbols-outlined">last_page</span>
+</button>
+</div>
+<input class="player-scrub" id="player-scrub" type="range" min="0" max="0" value="0" aria-label="Timeline position">
+<div class="player-options">
+<label class="player-speed" title="Playback speed">
+<span class="material-symbols-outlined">speed</span>
+<select id="player-speed" aria-label="Playback speed">
+<option value="0.5">0.5×</option>
+<option value="1" selected>1×</option>
+<option value="1.5">1.5×</option>
+<option value="2">2×</option>
+</select>
+</label>
+<button class="player-control" type="button" id="player-audio" title="Toggle audio" aria-pressed="false">
+<span class="material-symbols-outlined" id="player-audio-icon">volume_off</span>
+</button>
+</div>
+</div>
+</div>
+
+<div class="player-grid">
+<section class="player-panel">
+<div class="player-panel-head">
+<span class="material-symbols-outlined">layers</span>
+<span>Call stack</span>
+<span id="stack-count">0</span>
+</div>
+<div class="player-stack" id="player-stack"></div>
+</section>
+<section class="player-panel">
+<div class="player-panel-head">
+<span class="material-symbols-outlined">data_object</span>
+<span>Variables</span>
+<span id="var-count">0</span>
+</div>
+<div class="player-vars" id="player-vars"></div>
+</section>
+</div>
+
+<section class="player-panel">
+<div class="player-panel-head">
+<span class="material-symbols-outlined">data_array</span>
+<span>Structures</span>
+<span>Java layout</span>
+</div>
+<div class="player-structures" id="player-structures"></div>
+</section>
+
+<section class="player-panel">
+<div class="player-panel-head">
+<span class="material-symbols-outlined">terminal</span>
+<span>Stdout</span>
+<span id="player-stdout-label">after the run</span>
+</div>
+<pre class="player-stdout" id="player-stdout">—</pre>
+</section>
+
+<section class="player-panel">
+<div class="player-panel-head">
+<span class="material-symbols-outlined">list_alt</span>
+<span>Event stream</span>
+<span id="player-event-count">0</span>
+</div>
+<div class="player-events" id="player-events"></div>
+</section>
+
+<div class="player-error hidden" id="player-error"></div>
+
+<details class="trace-json">
+<summary>Raw trace + timeline JSON</summary>
+<pre id="report-json">{}</pre>
+</details>
+
+<div class="trace-report-actions">
+<button class="btn btn-secondary" type="button" id="copy-trace-btn">
+<span class="material-symbols-outlined">content_copy</span> Copy JSON
+</button>
+</div>
+</div>
+</section>
+</aside>
+</div>
+<!-- Interactive Compiler Error Demonstration Banner -->
+<section class="w-full mt-gutter transition-all duration-300 hidden" id="compiler-error-panel">
+<div class="p-space-md rounded-xl bg-error-container text-on-error-container shadow-sm flex flex-col md:flex-row md:items-start justify-between gap-space-md">
+<div class="flex items-start gap-space-md">
+<div class="w-9 h-9 rounded-lg bg-error flex items-center justify-center text-on-error shrink-0 mt-0.5 shadow-sm">
+<span class="material-symbols-outlined text-[20px]">error_outline</span>
+</div>
+<div class="flex flex-col">
+<div class="flex flex-wrap items-center gap-space-sm">
+<span class="font-headline-md text-headline-md font-bold">Run failed</span>
+
+
+</div>
+<div class="mt-2 p-space-sm rounded-lg bg-surface-container-lowest/80 font-label-code-sm text-label-code-sm text-on-surface flex flex-col gap-0.5">
+<span id="error-title" class="text-error font-medium"></span>
+<pre id="error-body" class="whitespace-pre-wrap text-on-surface-variant font-mono"></pre>
+</div>
+<p class="font-body-sm text-body-sm text-on-error-container mt-2">
+            Fix the issue above, then run again. The editor keeps your source.
+          </p>
+</div>
+</div>
+<div class="flex items-center gap-space-xs shrink-0 self-end md:self-start">
+<button class="px-space-md py-1.5 rounded-lg bg-surface-container-lowest hover:bg-surface text-on-surface font-body-sm text-body-sm shadow-xs transition-colors" onclick="dismissError()">
+          Dismiss
+        </button>
+</div>
+</div>
+</section>
+<!-- CodeMirror -->
+<script src="/assets/vendor/codemirror/codemirror.min.js"></script>
+<script src="/assets/vendor/codemirror/mode/clike/clike.min.js"></script>
+<script src="/assets/vendor/codemirror/addon/edit/closebrackets.min.js"></script>
+<script src="/assets/vendor/codemirror/addon/edit/matchbrackets.min.js"></script>
+<!-- App script -->
+<script>
+const DEFAULT_SOURCE = `public class Sample {
+    public static void main(String[] args) {
+        int x = 2;
+        int y = Sample.add(x, 3);
+        int[] nums = {1, 2, 3};
+        nums[0] = y;
+        System.out.println(y + ":" + nums[0]);
+    }
+
+    static int add(int a, int b) {
+        int c = a + b;
+        return c;
+    }
+}`;
+
+const editorEl = document.getElementById('code-editor');
+const editor = CodeMirror.fromTextArea(editorEl, {
+  mode: 'text/x-java',
+  theme: 'eclipse',
+  lineNumbers: true,
+  indentUnit: 4,
+  tabSize: 4,
+  lineWrapping: false,
+  autoCloseBrackets: true,
+  matchBrackets: true,
+  extraKeys: {
+    'Tab': (cm) => cm.replaceSelection('    ', 'end'),
+    'Ctrl-Enter': () => document.getElementById('run-btn').click(),
+    'Cmd-Enter': () => document.getElementById('run-btn').click()
+  }
+});
+if (!editor.getValue().trim()) editor.setValue(DEFAULT_SOURCE);
+
+// CodeMirror follows the shared site theme.
+let dark = document.documentElement.classList.contains('dark');
+function applyEditorTheme() {
+  editor.setOption('theme', dark ? 'dracula' : 'eclipse');
+}
+applyEditorTheme();
+window.addEventListener('codexonia:themechange', (event) => {
+  dark = Boolean(event.detail && event.detail.dark);
+  applyEditorTheme();
+});
+
+
+// ---------- Multi-file model ----------
+function escapeHtml(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+const files = [{name: 'Sample.java', source: DEFAULT_SOURCE}];
+let activeFile = 0;
+const fileTabsEl = document.getElementById('file-tabs');
+
+function renderTabs() {
+  fileTabsEl.innerHTML = files.map((f, i) =>
+    `<div data-idx="${i}" class="file-tab cursor-pointer group flex items-center gap-space-xs px-space-md py-1.5 rounded-t-lg ${i === activeFile ? 'bg-surface-container-lowest text-on-surface shadow-sm font-medium' : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container'} text-label-code-sm font-label-code-sm transition-all">
+<span class="material-symbols-outlined text-[15px] ${i === activeFile ? 'text-primary' : 'text-on-surface-variant'}">description</span>
+<span>${escapeHtml(f.name)}</span>
+${files.length > 1 ? `<button class="close-file ml-1 p-0.5 rounded hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface" data-idx="${i}"><span class="material-symbols-outlined text-[13px]">close</span></button>` : ''}
+</div>`).join('');
+  fileTabsEl.querySelectorAll('.file-tab').forEach(t => t.addEventListener('click', (ev) => {
+    if (ev.target.closest('.close-file')) return;
+    files[activeFile].source = editor.getValue();
+    activeFile = parseInt(t.dataset.idx, 10);
+    editor.setValue(files[activeFile].source);
+    renderTabs();
+  }));
+  fileTabsEl.querySelectorAll('.close-file').forEach(b => b.addEventListener('click', (ev) => {
+    ev.stopPropagation();
+    const idx = parseInt(b.dataset.idx, 10);
+    files[activeFile].source = editor.getValue();
+    files.splice(idx, 1);
+    activeFile = Math.max(0, activeFile - (idx <= activeFile ? 1 : 0));
+    editor.setValue(files[activeFile].source);
+    renderTabs();
+  }));
+}
+renderTabs();
+
+document.getElementById('add-file-btn').addEventListener('click', () => {
+  const name = prompt('New file name (.java):', 'Helper.java');
+  if (!name) return;
+  files[activeFile].source = editor.getValue();
+  files.push({name: name.endsWith('.java') ? name : name + '.java', source: ''});
+  activeFile = files.length - 1;
+  editor.setValue('');
+  renderTabs();
+});
+
+document.getElementById('run-btn').addEventListener('click', async () => {
+  const btn = document.getElementById('run-btn');
+  const panel = document.getElementById('compiler-error-panel');
+  panel.classList.add('hidden');
+  setRunStatus('RUNNING');
+  btn.disabled = true;
+  btn.style.opacity = '0.6';
+  try {
+    const res = await fetch('/api/run', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({files: files.map((f, i) => ({fileName: f.name, source: i === activeFile ? editor.getValue() : f.source, isMainFile: /public\s+static\s+void\s+main/.test(i === activeFile ? editor.getValue() : f.source)}))})
+    });
+    const trace = await res.json();
+    renderTrace(trace);
+    if (trace.status && trace.status !== 'COMPLETE') {
+      document.getElementById('error-title').textContent = trace.status;
+      document.getElementById('error-body').textContent = trace.error_message || 'The run did not complete.';
+      panel.classList.remove('hidden');
+      showToast(trace.status);
+    } else {
+      files[activeFile].source = editor.getValue();
+      showToast('Trace captured: ' + (trace.event_count || 0) + ' events');
+    }
+  } catch (e) {
+    renderTrace({status: 'CLIENT_ERROR', error_message: String(e), events: []});
+    document.getElementById('error-title').textContent = 'CLIENT_ERROR';
+    document.getElementById('error-body').textContent = String(e);
+    panel.classList.remove('hidden');
+    showToast('Run failed');
+  } finally {
+    btn.disabled = false;
+    btn.style.opacity = '';
+  }
+});
+
+document.getElementById('reset-btn').addEventListener('click', () => { editor.setValue(DEFAULT_SOURCE); });
+document.getElementById('copy-btn').addEventListener('click', () => navigator.clipboard.writeText(editor.getValue()));
+
+// ---------- Timeline player ----------
+const playerEls = {
+  status: document.getElementById('run-status'),
+  subtitle: document.getElementById('player-subtitle'),
+  empty: document.getElementById('run-empty'),
+  body: document.getElementById('run-report'),
+  error: document.getElementById('player-error'),
+  fileTabs: document.getElementById('player-file-tabs'),
+  code: document.getElementById('player-code'),
+  lineChip: document.getElementById('player-line-chip'),
+  eventKind: document.getElementById('player-event-kind'),
+  label: document.getElementById('player-label'),
+  frameCount: document.getElementById('player-frame-count'),
+  scrub: document.getElementById('player-scrub'),
+  speed: document.getElementById('player-speed'),
+  playIcon: document.getElementById('player-play-icon'),
+  audio: document.getElementById('player-audio'),
+  audioIcon: document.getElementById('player-audio-icon'),
+  stack: document.getElementById('player-stack'),
+  stackCount: document.getElementById('stack-count'),
+  vars: document.getElementById('player-vars'),
+  varCount: document.getElementById('var-count'),
+  structures: document.getElementById('player-structures'),
+  stdout: document.getElementById('player-stdout'),
+  stdoutLabel: document.getElementById('player-stdout-label'),
+  events: document.getElementById('player-events'),
+  eventCount: document.getElementById('player-event-count'),
+  json: document.getElementById('report-json'),
+  copy: document.getElementById('copy-trace-btn')
+};
+
+const EVENT_KIND = {
+  METHOD_CALL: ['CALL', 'is-call'],
+  ASSIGNMENT: ['ASSIGN', 'is-assign'],
+  METHOD_RETURN: ['RETURN', 'is-return']
+};
+
+let lastTrace = null;
+let timeline = null;
+let frames = [];
+let timelineSources = [];
+let sourceMap = new Map();
+let cursor = 0;
+let playing = false;
+let playTimer = null;
+let playbackSpeed = 1;
+let audioEnabled = false;
+let audioCtx = null;
+let viewFile = null;
+let codeViewFile = null;
+
+function setRunStatus(status) {
+  let kind = 'is-error';
+  if (status === 'COMPLETE') kind = 'is-ok';
+  else if (status === 'RUNNING' || status === 'IDLE') kind = 'is-warn';
+  playerEls.status.textContent = status;
+  playerEls.status.className = 'trace-status ' + kind;
+}
+
+function emptyRow(message) {
+  return '<div class="player-empty-row">' + escapeHtml(message) + '</div>';
+}
+
+function mainSourceName() {
+  const main = timelineSources.find(s => s.is_main_file);
+  return main ? main.file_name : timelineSources.length ? timelineSources[0].file_name : null;
+}
+
+function showPlayerError(message) {
+  playerEls.error.textContent = message;
+  playerEls.error.classList.remove('hidden');
+}
+
+function clearPlayerError() {
+  playerEls.error.textContent = '';
+  playerEls.error.classList.add('hidden');
+}
+
+function setControlsEnabled(enabled) {
+  document.querySelectorAll('.player-transport .player-control').forEach(button => {
+    button.disabled = !enabled;
+  });
+  playerEls.scrub.disabled = !enabled;
+}
+
+function renderFileTabs() {
+  const names = timelineSources.length
+    ? timelineSources.map(source => source.file_name)
+    : Array.from(new Set(frames.map(frame => frame.active_file).filter(Boolean)));
+  if (!viewFile && names.length) viewFile = names.includes(mainSourceName()) ? mainSourceName() : names[0];
+  playerEls.fileTabs.innerHTML = names.map((name, index) =>
+    '<button type="button" class="player-file-tab' + (name === viewFile ? ' is-active' : '') + '" data-file-index="' + index + '" data-file-name="' + escapeHtml(name) + '">' +
+      '<span class="material-symbols-outlined">description</span>' + escapeHtml(name) +
+    '</button>'
+  ).join('');
+  playerEls.fileTabs.querySelectorAll('[data-file-index]').forEach(button => {
+    button.addEventListener('click', () => {
+      const index = Number(button.dataset.fileIndex);
+      if (!Number.isInteger(index) || !names[index]) return;
+      viewFile = names[index];
+      codeViewFile = null;
+      updateFileTabs();
+      renderCode(frames[cursor] || null);
+    });
+  });
+}
+
+function updateFileTabs() {
+  playerEls.fileTabs.querySelectorAll('[data-file-index]').forEach(button => {
+    button.classList.toggle('is-active', button.dataset.fileName === viewFile);
+  });
+}
+
+function renderCode(frame) {
+  const source = viewFile ? sourceMap.get(viewFile) : null;
+  if (source == null) {
+    playerEls.code.innerHTML = '<div class="player-code-empty">Source is not available for this file.</div>';
+    codeViewFile = null;
+    return;
+  }
+  if (codeViewFile !== viewFile) {
+    playerEls.code.innerHTML = source.split('\n').map((line, index) =>
+      '<div class="player-code-line" data-line="' + (index + 1) + '">' +
+        '<span class="player-code-num">' + (index + 1) + '</span>' +
+        '<span class="player-code-text">' + escapeHtml(line) + '</span>' +
+      '</div>'
+    ).join('');
+    codeViewFile = viewFile;
+  }
+  playerEls.code.querySelectorAll('.player-code-line.is-active').forEach(line => line.classList.remove('is-active'));
+  if (frame && frame.active_file === viewFile && frame.active_line > 0) {
+    const line = playerEls.code.querySelector('[data-line="' + frame.active_line + '"]');
+    if (line) {
+      line.classList.add('is-active');
+      const target = line.offsetTop - (playerEls.code.clientHeight / 2) + (line.offsetHeight / 2);
+      playerEls.code.scrollTop = Math.max(0, target);
+    }
+  }
+}
+
+function renderStack(frame) {
+  const stack = Array.isArray(frame.call_stack) ? frame.call_stack.slice().reverse() : [];
+  playerEls.stackCount.textContent = String(stack.length);
+  playerEls.stack.innerHTML = stack.length ? stack.map((call, index) => {
+    const args = Array.isArray(call.args) && call.args.length ? '(' + call.args.join(', ') + ')' : '';
+    const owner = [call.class, call.method].filter(Boolean).join('.');
+    return '<div class="player-stack-row' + (index === 0 ? ' is-top' : '') + '">' +
+      '<span class="player-stack-depth">' + escapeHtml(String(call.depth)) + '</span>' +
+      '<div class="player-stack-copy">' +
+        '<strong>' + escapeHtml(owner + args) + '</strong>' +
+        '<span>' + escapeHtml((call.file || '') + (call.line > 0 ? ':' + call.line : '')) + '</span>' +
+      '</div>' +
+    '</div>';
+  }).join('') : emptyRow('No active frames.');
+}
+
+function renderVariables(frame) {
+  const variables = Array.isArray(frame.variables) ? frame.variables : [];
+  playerEls.varCount.textContent = String(variables.length);
+  playerEls.vars.innerHTML = variables.length ? variables.map(variable => {
+    const value = variable.changed
+      ? '<span class="player-var-old">' + escapeHtml(variable.old == null ? 'unset' : String(variable.old)) + '</span>' +
+        '<span class="player-var-arrow">\u2192</span>' +
+        '<span class="player-var-new">' + escapeHtml(variable.new == null ? 'null' : String(variable.new)) + '</span>'
+      : '<span class="player-var-value">' + escapeHtml(String(variable.value)) + '</span>';
+    return '<div class="player-var-row' + (variable.changed ? ' is-changed' : '') + '">' +
+      '<span class="player-var-name">' + escapeHtml(variable.name) + '</span>' +
+      '<span class="player-var-value-wrap">' + value + '</span>' +
+    '</div>';
+  }).join('') : emptyRow('No variables in scope.');
+}
+
+function renderStructures(frame) {
+  const structures = Array.isArray(frame.structures) ? frame.structures : [];
+  if (!structures.length) {
+    playerEls.structures.innerHTML = emptyRow('No array or structure values in scope.');
+    return;
+  }
+  playerEls.structures.innerHTML = structures.map(structure => {
+    const cells = structure.geometry && Array.isArray(structure.geometry.cells) ? structure.geometry.cells : [];
+    const changed = new Set(Array.isArray(structure.changed_indices) ? structure.changed_indices : []);
+    const width = cells.reduce((max, cell) => Math.max(max, cell.x + cell.w), 0);
+    const height = cells.reduce((max, cell) => Math.max(max, cell.y + cell.h), 0);
+    const rendered = cells.map(cell => {
+      const value = Array.isArray(structure.elements) ? structure.elements[cell.index] : '';
+      return '<div class="player-cell' + (changed.has(cell.index) ? ' is-changed' : '') + '" ' +
+        'style="left:' + cell.x + 'px;top:' + cell.y + 'px;width:' + cell.w + 'px;height:' + cell.h + 'px">' +
+        '<span class="player-cell-index">' + escapeHtml(String(cell.index)) + '</span>' +
+        '<span class="player-cell-value">' + escapeHtml(value == null ? '' : String(value)) + '</span>' +
+      '</div>';
+    }).join('');
+    return '<div class="player-structure">' +
+      '<div class="player-structure-head"><strong>' + escapeHtml(structure.name) + '</strong><span>' + escapeHtml(structure.kind) + '</span></div>' +
+      '<div class="player-structure-canvas" style="width:' + Math.max(width, 1) + 'px;height:' + Math.max(height, 1) + 'px">' + rendered + '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function renderEvents() {
+  if (!frames.length) {
+    playerEls.events.innerHTML = emptyRow('No events were recorded.');
+    playerEls.eventCount.textContent = '0';
+    return;
+  }
+  const limit = 1200;
+  const visible = frames.slice(0, limit);
+  playerEls.events.innerHTML = visible.map((frame, index) => {
+    const kind = EVENT_KIND[frame.event_type] || [frame.event_type || 'EVENT', ''];
+    return '<div class="player-event' + (index === cursor ? ' is-active' : '') + '" data-index="' + index + '">' +
+      '<span class="player-event-seq">' + escapeHtml(String(frame.seq).padStart(2, '0')) + '</span>' +
+      '<span class="trace-type ' + kind[1] + '">' + escapeHtml(kind[0]) + '</span>' +
+      '<div class="player-event-copy"><strong>' + escapeHtml(frame.label.title) + '</strong>' +
+      '<span>' + escapeHtml(frame.label.subtitle) + '</span></div>' +
+    '</div>';
+  }).join('') + (frames.length > limit
+    ? '<div class="player-events-note">Showing the first ' + limit + ' of ' + frames.length + ' frames. Use the scrubber for the rest.</div>'
+    : '');
+  playerEls.eventCount.textContent = frames.length + (frames.length === 1 ? ' frame' : ' frames');
+  updateEventSelection();
+}
+
+function updateEventSelection() {
+  playerEls.events.querySelectorAll('.player-event').forEach(row => {
+    row.classList.toggle('is-active', Number(row.dataset.index) === cursor);
+  });
+  const active = playerEls.events.querySelector('.player-event.is-active');
+  if (!active) return;
+  const list = playerEls.events;
+  const listRect = list.getBoundingClientRect();
+  const activeRect = active.getBoundingClientRect();
+  if (activeRect.top < listRect.top) {
+    list.scrollTop += activeRect.top - listRect.top - 4;
+  } else if (activeRect.bottom > listRect.bottom) {
+    list.scrollTop += activeRect.bottom - listRect.bottom + 4;
+  }
+}
+
+function renderFrame() {
+  const frame = frames[cursor];
+  if (!frame) return;
+  if (frame.active_file) viewFile = frame.active_file;
+  updateFileTabs();
+  renderCode(frame);
+  renderStack(frame);
+  renderVariables(frame);
+  renderStructures(frame);
+
+  const stdout = frame.stdout_visible ? String(frame.stdout_visible).replace(/\s+$/, '') : '';
+  playerEls.stdout.textContent = stdout || '\u2014';
+  playerEls.stdoutLabel.textContent = stdout ? 'captured output' : 'after the run';
+  playerEls.lineChip.textContent = frame.active_line > 0 ? 'Line ' + frame.active_line : 'Line —';
+  playerEls.eventKind.textContent = (EVENT_KIND[frame.event_type] || [frame.event_type || 'EVENT'])[0];
+  playerEls.label.textContent = frame.label.title;
+  playerEls.frameCount.textContent = (cursor + 1) + ' / ' + frames.length;
+  playerEls.scrub.value = String(cursor);
+  const progress = frames.length > 1 ? (cursor / (frames.length - 1)) * 100 : 0;
+  playerEls.scrub.style.setProperty('--player-progress', progress + '%');
+  updateEventSelection();
+
+  const kinds = ['anim-push', 'anim-pop', 'anim-change'];
+  playerEls.label.classList.remove(...kinds);
+  void playerEls.label.offsetWidth;
+  const animation = frame.animation || {};
+  playerEls.label.style.animationDuration = (animation.duration_ms || 200) + 'ms';
+  playerEls.label.classList.add(animation.kind === 'frame_push' ? 'anim-push'
+    : animation.kind === 'frame_pop' ? 'anim-pop' : 'anim-change');
+}
+
+function setCursor(index) {
+  if (!frames.length) return;
+  const next = Math.max(0, Math.min(frames.length - 1, Number(index) || 0));
+  const changed = next !== cursor;
+  cursor = next;
+  renderFrame();
+  if (changed && audioEnabled) playTone(frames[cursor].tone);
+}
+
+function pause() {
+  playing = false;
+  if (playTimer) {
+    clearTimeout(playTimer);
+    playTimer = null;
+  }
+  playerEls.playIcon.textContent = 'play_arrow';
+  playerEls.playIcon.parentElement.setAttribute('aria-label', 'Play');
+}
+
+function scheduleNext() {
+  if (!playing) return;
+  if (cursor >= frames.length - 1) {
+    pause();
+    return;
+  }
+  const base = frames[cursor] && frames[cursor].animation ? frames[cursor].animation.duration_ms : 220;
+  playTimer = setTimeout(() => {
+    if (!playing) return;
+    setCursor(cursor + 1);
+    scheduleNext();
+  }, Math.max(60, base / playbackSpeed));
+}
+
+function togglePlay() {
+  if (!frames.length) return;
+  if (playing) {
+    pause();
+    return;
+  }
+  if (cursor >= frames.length - 1) setCursor(0);
+  playing = true;
+  playerEls.playIcon.textContent = 'pause';
+  playerEls.playIcon.parentElement.setAttribute('aria-label', 'Pause');
+  if (audioEnabled) {
+    ensureAudio();
+    playTone(frames[cursor].tone);
+  }
+  scheduleNext();
+}
+
+function ensureAudio() {
+  if (!audioCtx) {
+    const AudioCtor = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtor) {
+      showToast('Audio is not supported in this browser');
+      return null;
+    }
+    try {
+      audioCtx = new AudioCtor();
+    } catch (error) {
+      showToast('Audio could not be started');
+      return null;
+    }
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+  return audioCtx;
+}
+
+function playTone(tone) {
+  if (!audioEnabled || !tone) return;
+  const ctx = ensureAudio();
+  if (!ctx) return;
+  const start = ctx.currentTime + 0.001;
+  const duration = Math.max(0.06, Math.min(0.8, (tone.duration_ms || 150) / 1000));
+  const oscillator = ctx.createOscillator();
+  const gain = ctx.createGain();
+  oscillator.type = ['sine', 'triangle', 'square', 'sawtooth'].includes(tone.oscillator) ? tone.oscillator : 'sine';
+  oscillator.frequency.setValueAtTime(tone.frequency_hz || 220, start);
+  gain.gain.setValueAtTime(0.0001, start);
+  gain.gain.exponentialRampToValueAtTime(0.09, start + 0.012);
+  gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+  oscillator.connect(gain);
+  gain.connect(ctx.destination);
+  oscillator.start(start);
+  oscillator.stop(start + duration + 0.02);
+}
+
+function toggleAudio() {
+  audioEnabled = !audioEnabled;
+  playerEls.audio.setAttribute('aria-pressed', String(audioEnabled));
+  playerEls.audioIcon.textContent = audioEnabled ? 'volume_up' : 'volume_off';
+  if (audioEnabled) {
+    ensureAudio();
+    playTone(frames[cursor] ? frames[cursor].tone : null);
+  }
+}
+
+function renderEmptyTimeline(trace) {
+  pause();
+  cursor = 0;
+  if (!viewFile) viewFile = mainSourceName();
+  codeViewFile = null;
+  renderFileTabs();
+  renderCode(null);
+  playerEls.stack.innerHTML = emptyRow('No active frames.');
+  playerEls.vars.innerHTML = emptyRow('No variables in scope.');
+  playerEls.structures.innerHTML = emptyRow('No structures in scope.');
+  playerEls.events.innerHTML = emptyRow('No events were recorded.');
+  playerEls.stackCount.textContent = '0';
+  playerEls.varCount.textContent = '0';
+  playerEls.eventCount.textContent = '0 frames';
+  playerEls.stdout.textContent = trace && trace.stdout ? String(trace.stdout).replace(/\s+$/, '') : '\u2014';
+  playerEls.stdoutLabel.textContent = trace && trace.stdout ? 'final output' : 'no output';
+  playerEls.lineChip.textContent = 'Line —';
+  playerEls.eventKind.textContent = trace && trace.status ? trace.status : 'EMPTY';
+  playerEls.label.textContent = 'No executable frames';
+  playerEls.frameCount.textContent = '0 / 0';
+  playerEls.scrub.max = '0';
+  playerEls.scrub.value = '0';
+  playerEls.scrub.style.setProperty('--player-progress', '0%');
+  setControlsEnabled(false);
+  playerEls.empty.classList.add('hidden');
+  playerEls.body.classList.remove('hidden');
+}
+
+function renderTrace(trace) {
+  pause();
+  lastTrace = trace;
+  clearPlayerError();
+  const events = Array.isArray(trace.events) ? trace.events : [];
+  const calls = events.filter(event => event.type === 'METHOD_CALL').length;
+  const changes = events.filter(event => event.type === 'ASSIGNMENT').length;
+  setRunStatus(trace.status || 'UNKNOWN');
+  playerEls.subtitle.textContent = events.length + ' events \u00b7 ' + calls + ' calls \u00b7 ' + changes + ' changes';
+  playerEls.json.textContent = JSON.stringify(trace, null, 2);
+
+  timeline = trace.timeline || null;
+  timelineSources = timeline && Array.isArray(timeline.sources) ? timeline.sources : [];
+  sourceMap = new Map(timelineSources.map(source => [source.file_name, source.content || '']));
+  frames = timeline && Array.isArray(timeline.frames) ? timeline.frames : [];
+  viewFile = null;
+  codeViewFile = null;
+  cursor = 0;
+
+  playerEls.empty.classList.add('hidden');
+  playerEls.body.classList.remove('hidden');
+
+  if (!timeline) {
+    playerEls.subtitle.textContent = 'Timeline unavailable \u00b7 raw trace only';
+    showPlayerError(trace.error_message || 'The server did not return a visualization timeline.');
+    renderEmptyTimeline(trace);
+    return;
+  }
+  if (timeline.error_message) {
+    showPlayerError(timeline.error_message);
+  }
+  if (!frames.length) {
+    playerEls.subtitle.textContent = 'No executable frames \u00b7 ' + (timeline.status || trace.status || 'EMPTY');
+    renderEmptyTimeline(trace);
+    return;
+  }
+
+  playerEls.scrub.max = String(frames.length - 1);
+  renderFileTabs();
+  renderEvents();
+  setControlsEnabled(true);
+  setCursor(0);
+  playerEls.frameCount.textContent = '1 / ' + frames.length;
+}
+
+playerEls.events.addEventListener('click', event => {
+  const row = event.target.closest('.player-event');
+  if (!row) return;
+  pause();
+  setCursor(Number(row.dataset.index));
+});
+
+playerEls.scrub.addEventListener('input', () => {
+  pause();
+  setCursor(Number(playerEls.scrub.value));
+});
+
+playerEls.speed.addEventListener('change', () => {
+  playbackSpeed = Number(playerEls.speed.value) || 1;
+});
+
+window.addEventListener('resize', () => {
+  if (frames.length) updateEventSelection();
+});
+
+playerEls.audio.addEventListener('click', toggleAudio);
+
+document.querySelectorAll('[data-player]').forEach(button => {
+  button.addEventListener('click', () => {
+    const action = button.dataset.player;
+    if (action === 'play') {
+      togglePlay();
+    } else if (action === 'rewind') {
+      pause();
+      setCursor(0);
+    } else if (action === 'end') {
+      pause();
+      setCursor(frames.length - 1);
+    } else if (action === 'step-back') {
+      pause();
+      setCursor(cursor - 1);
+    } else if (action === 'step-forward') {
+      pause();
+      setCursor(cursor + 1);
+    }
+  });
+});
+
+document.addEventListener('keydown', event => {
+  const tag = event.target && event.target.tagName;
+  const inEditor = event.target instanceof Element && event.target.closest('.CodeMirror');
+  if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA' || tag === 'BUTTON' || tag === 'A' || inEditor) return;
+  if (event.key === ' ') {
+    event.preventDefault();
+    togglePlay();
+  } else if (event.key === 'ArrowLeft') {
+    event.preventDefault();
+    pause();
+    setCursor(cursor - 1);
+  } else if (event.key === 'ArrowRight') {
+    event.preventDefault();
+    pause();
+    setCursor(cursor + 1);
+  }
+});
+
+playerEls.copy.addEventListener('click', async () => {
+  if (!lastTrace) return;
+  const text = JSON.stringify(lastTrace, null, 2);
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch (error) {
+    const area = document.createElement('textarea');
+    area.value = text;
+    document.body.appendChild(area);
+    area.select();
+    try { document.execCommand('copy'); } catch (ignored) {}
+    area.remove();
+  }
+  const original = playerEls.copy.innerHTML;
+  playerEls.copy.innerHTML = '<span class="material-symbols-outlined">check</span> Copied';
+  setTimeout(() => { playerEls.copy.innerHTML = original; }, 1600);
+});
+
+
+
+
+
+// Toast helper
+let toastTimer = null;
+function showToast(msg) {
+  const t = document.getElementById('run-toast');
+  t.textContent = msg;
+  t.classList.remove('hidden');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.add('hidden'), 2500);
+}
+
+function dismissError() {
+  document.getElementById('compiler-error-panel').classList.add('hidden');
+}
+</script>
+</div></main><div id="site-footer"></div>
+<script src="/assets/site.js" defer></script>
+</body></html>

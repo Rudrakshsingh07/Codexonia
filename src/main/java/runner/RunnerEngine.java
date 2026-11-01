@@ -24,14 +24,20 @@ public final class RunnerEngine {
 
     private final DockerSandbox sandbox;
     private final LimitPolicy policy;
+    private final Path jobsRoot;
 
     public RunnerEngine() {
         this(LimitPolicy.defaults());
     }
 
     public RunnerEngine(LimitPolicy policy) {
+        this(policy, SandboxConfig.jobsRoot());
+    }
+
+    RunnerEngine(LimitPolicy policy, Path jobsRoot) {
         this.policy = policy;
-        this.sandbox = new DockerSandbox(policy);
+        this.jobsRoot = jobsRoot.toAbsolutePath().normalize();
+        this.sandbox = new DockerSandbox(policy, this.jobsRoot, SandboxConfig.dockerVolume());
     }
 
     public RunOutcome run(CodeSubmission submission) {
@@ -48,7 +54,8 @@ public final class RunnerEngine {
 
         Path ws;
         try {
-            ws = Files.createTempDirectory("codexonia-job-");
+            Files.createDirectories(jobsRoot);
+            ws = Files.createTempDirectory(jobsRoot, "codexonia-job-");
         } catch (IOException e) {
             return RunOutcome.error("INTERNAL_ERROR", e.getMessage());
         }
@@ -77,7 +84,7 @@ public final class RunnerEngine {
                     }
                 }
             }
-            String traceJson = TraceSerializer.toJson(submission, events, run.stdout, run.status);
+            String traceJson = TraceSerializer.toJson(submission, events, run.stdout, run.status, run.errorMessage);
             byte[] traceGz = TraceSerializer.gzip(traceJson);
             if (run.completed()) {
                 return RunOutcome.ok(traceJson, traceGz, events.size());

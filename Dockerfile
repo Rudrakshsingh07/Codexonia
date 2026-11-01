@@ -1,16 +1,24 @@
-# Codexonia backend image
-# Base: official Eclipse Temurin JDK 26 (matches your local JDK 26.0.2)
-FROM eclipse-temurin:26-jdk
+# syntax=docker/dockerfile:1
+# Codexonia web image: Spring Boot + static frontend in one jar.
+# The runner shells out to the host Docker daemon through the mounted socket.
 
-# Working directory inside the container
+FROM maven:3.9-eclipse-temurin-26 AS build
+
+WORKDIR /build
+COPY pom.xml ./
+RUN mvn -B -q -DskipTests dependency:go-offline
+
+COPY src ./src
+RUN mvn -B -q -DskipTests package
+
+FROM eclipse-temurin:26-jre AS runtime
+
+# Docker CLI only (no daemon). It talks to the socket mounted by Compose.
+COPY --from=docker:29-cli /usr/local/bin/docker /usr/local/bin/docker
+
 WORKDIR /app
+COPY --from=build /build/target/codexonia-0.1.0.jar /app/codexonia.jar
+RUN mkdir -p /var/lib/codexonia/jobs
 
-# Copy only what the build needs (see .dockerignore)
-COPY src/ src/
-COPY test-vectors.json .
-
-# Compile the Java sources the same way you do locally
-RUN javac -d out src/main/java/HashFunction.java
-
-# Default command: verify the shared test vectors
-CMD ["java", "-cp", "out", "HashFunction"]
+EXPOSE 8080
+ENTRYPOINT ["java", "-jar", "/app/codexonia.jar"]

@@ -1,9 +1,11 @@
 # HashFunction Manual — For the Audio Processing Engine Developer
 
-This document defines the contract implemented by `HashFunction.java` (Java prototype).
-The production version will run in TypeScript in the browser and must produce
-**byte-for-byte identical results**. Refer to ADR-2 and the Tone Hash Function
-design doc for background.
+This document defines the contract implemented by `HashFunction.java` (the
+production implementation). In the shipped player, `RunController` computes a
+tone spec for every frame in Java and the browser only schedules it; there is no
+hash implementation in JavaScript. Any future client-side reimplementation — for
+example the TeaVM fallback — must produce **byte-for-byte identical results**.
+Refer to ADR-2 and the Tone Hash Function design doc for background.
 
 ## 1. Purpose
 
@@ -34,9 +36,9 @@ for each char c of the signature (by UTF-16 code unit, i.e. charCodeAt):
 ```
 
 - Java: `int` wraps naturally.
-- TypeScript: use `Math.imul(hash, 0x01000193)` and `>>> 0` to keep it unsigned.
-  Do NOT use `*` alone (64-bit doubles lose exactness past 2^53) and do NOT use
-  any built-in string hash.
+- JavaScript/TypeScript (if used): use `Math.imul(hash, 0x01000193)` and `>>> 0`
+  to keep it unsigned. Do NOT use `*` alone (64-bit doubles lose exactness past
+  2^53) and do NOT use any built-in string hash.
 - Treat the result as an **unsigned** 32-bit integer downstream.
 
 ## 4. Stage 2 — hash → tone parameters (integer math only)
@@ -85,8 +87,8 @@ platforms agree exactly.
 ## 6. Verification
 
 `test-vectors.json` contains the full expected `signature → hash → tone` mapping
-for 9 canonical signatures. Your TypeScript implementation must reproduce every
-entry exactly. Java reference:
+for 9 canonical signatures. Any reimplementation must reproduce every entry
+exactly. Java reference:
 
 ```bash
 cd Projects/Codexonia
@@ -96,8 +98,9 @@ java -cp out HashFunction swap            # prints hash + tone for a signature
 java -cp out HashFunction --generate      # regenerates the vector file
 ```
 
-In the browser, feed `oscillator` into `OscillatorNode.type`, `frequencyHz` into
-`OscillatorNode.frequency.value`, and `durationMs` into the envelope/stop time,
-scheduled on the `AudioContext` clock (not `setTimeout`). Call
-`audioCtx.resume()` on the first user gesture (Play). Memoizing per-signature
-results in a `Map` is allowed (pure function, not persisted storage).
+The browser player feeds the precomputed `tone` fields from each timeline frame
+into `OscillatorNode.type`, `OscillatorNode.frequency.value`, and the envelope/stop
+time, scheduled on the `AudioContext` clock (not `setTimeout`). Call
+`audioCtx.resume()` on the first user gesture (Play). A future client-side
+reimplementation may memoize per-signature results in a `Map` (pure function, not
+persisted storage).

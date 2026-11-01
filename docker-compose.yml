@@ -1,0 +1,43 @@
+name: codexonia
+
+services:
+  # One-shot build helper. Compose builds codexonia-sandbox:latest from
+  # sandbox/Dockerfile, runs it with a harmless entrypoint, and exits. The web
+  # service waits for that image to exist before accepting /api/run requests.
+  sandbox-image:
+    image: codexonia-sandbox:latest
+    build:
+      context: .
+      dockerfile: sandbox/Dockerfile
+    entrypoint: ["/bin/true"]
+    restart: "no"
+
+  web:
+    image: codexonia-web:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      sandbox-image:
+        condition: service_completed_successfully
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      # The volume is shared with the host Docker daemon. RunnerEngine creates a
+      # subdirectory per job and DockerSandbox mounts only that subpath into the
+      # sandbox, so container-local paths never cross the Docker Desktop boundary.
+      CODEXONIA_JOBS_DIR: /var/lib/codexonia/jobs
+      CODEXONIA_DOCKER_VOLUME: codexonia-jobs
+    volumes:
+      # Docker-outside-of-Docker: the runner needs the host daemon to start the
+      # hardened per-job sandbox. This is root-equivalent host access; keep the
+      # published port bound to loopback.
+      - ${DOCKER_SOCKET:-/var/run/docker.sock}:/var/run/docker.sock
+      - codexonia-jobs:/var/lib/codexonia/jobs
+    restart: unless-stopped
+    security_opt:
+      - label=disable
+
+volumes:
+  codexonia-jobs:
+    name: codexonia-jobs

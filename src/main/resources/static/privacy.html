@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy — Codexonia</title>
+  <meta name="description" content="How Codexonia handles submitted source, execution traces, browser storage, and third-party assets.">
+  <meta name="theme-color" content="#0059b5">
+  <link rel="icon" href="/assets/codexonia-mark.svg" type="image/svg+xml">
+  <link rel="preload" href="/assets/fonts/material-symbols-outlined.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/jetbrains-mono-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <script src="/assets/theme-init.js"></script>
+  <link rel="stylesheet" href="/assets/fonts.css">
+  <link rel="stylesheet" href="/assets/tailwind.css">
+  <link rel="stylesheet" href="/assets/site.css">
+  <link rel="stylesheet" href="/assets/content.css">
+</head>
+<body data-page="privacy" class="bg-surface font-body-md text-body-md text-on-surface antialiased min-h-screen flex flex-col">
+  <div id="site-header"></div>
+
+  <main class="flex-1 pt-16">
+    <section class="page-hero">
+      <div class="shell page-hero-inner">
+        <span class="eyebrow"><span class="pulse-dot"></span> Privacy note</span>
+        <h1>Privacy, in plain language.</h1>
+        <p>
+          Codexonia is a course project, not a student surveillance system. This page
+          explains what is submitted, what the server does with it, and what stays in
+          your browser.
+        </p>
+        <div class="page-hero-meta">
+          <span><span class="material-symbols-outlined">database</span> No database in v1</span>
+          <span><span class="material-symbols-outlined">person_off</span> No accounts</span>
+          <span><span class="material-symbols-outlined">update</span> October 2026</span>
+        </div>
+      </div>
+    </section>
+
+    <div class="shell page-body">
+      <article class="prose">
+        <h2 style="margin-top:0">What you submit</h2>
+        <p>
+          When you press <strong>Run</strong>, the browser sends the Java source files
+          currently in the editor to <code>POST /api/run</code>. The server uses that
+          source to compile and execute the program in a sandbox. The source is not
+          written to a database and is not tied to an account.
+        </p>
+
+        <h2>What the server produces</h2>
+        <p>
+          The runner returns an execution trace: method calls, assignments, returns,
+          source locations, and captured stdout. The trace is sent back to your browser.
+          The server does not keep a persistent run history.
+        </p>
+        <div class="callout is-success">
+          <div class="callout-icon"><span class="material-symbols-outlined">delete_sweep</span></div>
+          <div class="callout-body">
+            <h3>Ephemeral by design</h3>
+            <p>The runner works inside a temporary workspace and removes it after the job. The current build has no user database, saved traces, or shared run history.</p>
+          </div>
+        </div>
+
+        <h2>What stays in your browser</h2>
+        <p>
+          The site stores your light/dark preference in <code>localStorage</code>. This
+          build does not save submitted source or run traces in browser storage. If an
+          older version of the site left a <code>codexonia-trace</code> entry in your
+          browser, you can clear site data to remove it.
+        </p>
+
+        <h2>Sandbox isolation</h2>
+        <p>
+          Student code runs in a Docker container with no network, a read-only root
+          filesystem, all Linux capabilities dropped, and a non-root user. CPU, memory,
+          process count, output size, and wall-clock time are bounded. The host Spring
+          Boot process never executes student code in-process.
+        </p>
+        <p>
+          Read the exact defaults in the <a href="/docs#sandbox-limits">field guide</a>.
+        </p>
+
+        <h2>Audio</h2>
+        <p>
+          The deterministic tone mapping is computed from event signatures. When the
+          browser player is enabled, audio is generated locally with the Web Audio API.
+          The site does not request microphone access and does not record audio.
+        </p>
+
+        <h2>Third-party assets</h2>
+        <p>
+          The pages load fonts from Google Fonts, utility styles from the Tailwind CDN,
+          and the editor from the CodeMirror CDN. Those requests are made directly by
+          your browser to those providers and are subject to their own policies. They
+          are used for presentation and editing, not for analytics.
+        </p>
+        <div class="callout is-warning">
+          <div class="callout-icon"><span class="material-symbols-outlined">public</span></div>
+          <div class="callout-body">
+            <h3>CDN dependency</h3>
+            <p>If you need a fully self-contained deployment, vendor the font, Tailwind, and CodeMirror assets instead of loading them from third-party CDNs.</p>
+          </div>
+        </div>
+
+        <h2>What we do not do</h2>
+        <ul>
+          <li>No account creation or login.</li>
+          <li>No advertising or behavioral analytics in this build.</li>
+          <li>No selling or sharing of submitted source.</li>
+          <li>No persistent student trace database.</li>
+        </ul>
+
+        <h2>Changes</h2>
+        <p>
+          If the retention model changes, this page and the project specification must
+          change with it. The current implementation follows the “no database in v1”
+          constraint recorded in the architecture notes.
+        </p>
+
+        <div class="contact-band">
+          <div>
+            <h2>Questions about data handling?</h2>
+            <p>Review the project architecture or the sandbox limits in the field guide.</p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <a class="btn btn-secondary" href="/about">About the project</a>
+            <a class="btn btn-secondary" href="/docs#sandbox-limits">Sandbox limits</a>
+          </div>
+        </div>
+      </article>
+    </div>
+  </main>
+
+  <div id="site-footer"></div>
+  <script src="/assets/site.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>404 — Trace not found — Codexonia</title>
+  <meta name="description" content="The requested Codexonia page does not exist.">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#0059b5">
+  <link rel="icon" href="/assets/codexonia-mark.svg" type="image/svg+xml">
+  <link rel="preload" href="/assets/fonts/material-symbols-outlined.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/jetbrains-mono-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <script src="/assets/theme-init.js"></script>
+  <link rel="stylesheet" href="/assets/fonts.css">
+  <link rel="stylesheet" href="/assets/tailwind.css">
+  <link rel="stylesheet" href="/assets/site.css">
+  <link rel="stylesheet" href="/assets/content.css">
+</head>
+<body data-page="error" class="bg-surface font-body-md text-body-md text-on-surface antialiased min-h-screen flex flex-col">
+  <div id="site-header"></div>
+
+  <main class="flex-1 pt-16">
+    <section class="error-page">
+      <div class="shell error-grid">
+        <div class="error-copy">
+          <div class="error-code">4<span>0</span>4</div>
+          <span class="eyebrow"><span class="pulse-dot"></span> ROUTE_NOT_FOUND</span>
+          <h1>The trace ends here.</h1>
+          <p>
+            This address does not correspond to a page in the current build. The event
+            log has no frame for it. Return to a known location and continue.
+          </p>
+          <div class="error-actions">
+            <a class="btn btn-primary btn-lg" href="/">
+              Back to home
+              <span class="material-symbols-outlined">home</span>
+            </a>
+            <a class="btn btn-secondary btn-lg" href="/submit">Open the editor</a>
+            <a class="btn btn-ghost btn-lg" href="/docs">Field guide</a>
+          </div>
+        </div>
+
+        <div class="error-terminal" aria-label="Error details">
+          <div class="error-terminal-bar">
+            <span class="material-symbols-outlined">error</span>
+            codexonia · route resolver
+          </div>
+          <div class="error-terminal-body">
+            <div><span class="cmd">&gt;</span> resolve <span id="requested-path">/unknown</span></div>
+            <div class="dim">  scanning route table ...</div>
+            <div class="err">  EVENT: ROUTE_NOT_FOUND</div>
+            <div><span class="field">  seq</span>     404</div>
+            <div><span class="field">  status</span>  no matching page</div>
+            <div><span class="field">  hint</span>    check the URL or start from the editor</div>
+            <div class="dim">  replay aborted.</div>
+            <div class="ok">&gt; ready for a known frame.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="site-footer"></div>
+  <script src="/assets/site.js" defer></script>
+  <script>
+    (function () {
+      var path = document.getElementById("requested-path");
+      if (path) path.textContent = window.location.pathname + window.location.search;
+    })();
+  </script>
+</body>
+</html>

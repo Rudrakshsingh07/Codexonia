@@ -2,4 +2,5 @@ Study/
 *.class
 out/
 target/
+*.zip
 

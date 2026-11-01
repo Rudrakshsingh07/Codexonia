@@ -1,18 +1,25 @@
 # VCS / tooling
 .git
+.gitignore
 .obsidian
 Study
 Diagrams
+Stitch
 Project Specification
+archive
 
-# Local build output (rebuilt inside the image), except precompiled runner
-# tracer classes needed by the sandbox image (sandbox/Dockerfile)
-out/*
-!out/runner
+# Local build output (rebuilt inside the images)
+target
+out
 *.class
+*.zip
 
-# Docs not needed at runtime
-docs/
+# Docs and launch scripts not needed at runtime
+docs
 README.md
+ARCHITECTURE.md
 .dockerignore
 Dockerfile
+docker-compose.yml
+run.sh
+run.cmd
