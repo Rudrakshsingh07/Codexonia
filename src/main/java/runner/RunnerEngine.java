@@ -77,7 +77,7 @@ public final class RunnerEngine {
                     }
                 }
             }
-            String traceJson = TraceSerializer.toJson(submission, events, run.stdout, run.status);
+            String traceJson = TraceSerializer.toJson(submission, events, run.stdout, run.status, run.errorMessage);
             byte[] traceGz = TraceSerializer.gzip(traceJson);
             if (run.completed()) {
                 return RunOutcome.ok(traceJson, traceGz, events.size());

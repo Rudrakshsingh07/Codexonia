@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>500 — Trace interrupted — Codexonia</title>
+  <meta name="description" content="Codexonia hit an unexpected server error.">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#0059b5">
+  <link rel="icon" href="/assets/codexonia-mark.svg" type="image/svg+xml">
+  <link rel="preload" href="/assets/fonts/material-symbols-outlined.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/jetbrains-mono-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <script src="/assets/theme-init.js"></script>
+  <link rel="stylesheet" href="/assets/fonts.css">
+  <link rel="stylesheet" href="/assets/tailwind.css">
+  <link rel="stylesheet" href="/assets/site.css">
+  <link rel="stylesheet" href="/assets/content.css">
+</head>
+<body data-page="error" class="bg-surface font-body-md text-body-md text-on-surface antialiased min-h-screen flex flex-col">
+  <div id="site-header"></div>
+
+  <main class="flex-1 pt-16">
+    <section class="error-page">
+      <div class="shell error-grid">
+        <div class="error-copy">
+          <div class="error-code">5<span>0</span>0</div>
+          <span class="eyebrow"><span class="pulse-dot"></span> TRACE_INTERRUPTED</span>
+          <h1>The recorder hit a bad frame.</h1>
+          <p>
+            The server encountered an unexpected error while handling this request.
+            Nothing was saved. Try the action again, or return to a known page.
+          </p>
+          <div class="error-actions">
+            <a class="btn btn-primary btn-lg" href="/">
+              Back to home
+              <span class="material-symbols-outlined">home</span>
+            </a>
+            <a class="btn btn-secondary btn-lg" href="/submit">Open the editor</a>
+            <a class="btn btn-ghost btn-lg" href="/docs">Field guide</a>
+          </div>
+        </div>
+
+        <div class="error-terminal" aria-label="Error details">
+          <div class="error-terminal-bar">
+            <span class="material-symbols-outlined">warning</span>
+            codexonia · server boundary
+          </div>
+          <div class="error-terminal-body">
+            <div><span class="cmd">&gt;</span> execute request</div>
+            <div class="dim">  opening sandbox ...</div>
+            <div class="err">  EVENT: INTERNAL_ERROR</div>
+            <div><span class="field">  seq</span>     500</div>
+            <div><span class="field">  state</span>  run aborted</div>
+            <div><span class="field">  hint</span>    retry once; if it repeats, check the server log</div>
+            <div class="dim">  no source or trace retained.</div>
+            <div class="ok">&gt; safe to start again.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="site-footer"></div>
+  <script src="/assets/site.js" defer></script>
+</body>
+</html>

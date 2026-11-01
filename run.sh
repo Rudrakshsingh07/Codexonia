@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Launches the full Codexonia stack: sandbox image + Spring Boot web app,
-# then opens the Submit Code page in the default browser.
+# then opens the landing page in the default browser.
 set -euo pipefail
 cd "$(dirname "$0")"
 

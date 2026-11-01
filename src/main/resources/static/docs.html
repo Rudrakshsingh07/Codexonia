@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Field Guide — Codexonia</title>
+  <meta name="description" content="How Codexonia runs Java, records execution events, reads a trace, and maps event signatures to deterministic tones.">
+  <meta name="theme-color" content="#0059b5">
+  <link rel="icon" href="/assets/codexonia-mark.svg" type="image/svg+xml">
+  <link rel="preload" href="/assets/fonts/material-symbols-outlined.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/jetbrains-mono-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <script src="/assets/theme-init.js"></script>
+  <link rel="stylesheet" href="/assets/fonts.css">
+  <link rel="stylesheet" href="/assets/tailwind.css">
+  <link rel="stylesheet" href="/assets/site.css">
+  <link rel="stylesheet" href="/assets/content.css">
+</head>
+<body data-page="docs" class="bg-surface font-body-md text-body-md text-on-surface antialiased min-h-screen flex flex-col">
+  <div id="site-header"></div>
+
+  <main class="flex-1 pt-16">
+    <section class="page-hero">
+      <div class="shell page-hero-inner">
+        <span class="eyebrow"><span class="pulse-dot"></span> Field guide</span>
+        <h1>Everything the trace knows.</h1>
+        <p>
+          Codexonia records a narrow, versioned set of execution events. This guide
+          explains what each one means, how to read a trace, and how the same event
+          becomes a deterministic tone.
+        </p>
+        <div class="page-hero-meta">
+          <span><span class="material-symbols-outlined">tag</span> Trace schema v1</span>
+          <span><span class="material-symbols-outlined">memory</span> Java 26 runtime</span>
+          <span><span class="material-symbols-outlined">update</span> Updated October 2026</span>
+        </div>
+      </div>
+    </section>
+
+    <div class="shell page-body">
+      <div class="docs-layout">
+        <aside class="docs-sidebar" aria-label="Guide contents">
+          <div class="sidebar-group">
+            <h2>Start here</h2>
+            <div class="sidebar-links">
+              <a href="#quick-start">Quick start</a>
+              <a href="#what-gets-traced">What gets traced</a>
+              <a href="#reading-a-trace">Reading a trace</a>
+            </div>
+          </div>
+          <div class="sidebar-group">
+            <h2>Reference</h2>
+            <div class="sidebar-links">
+              <a href="#sandbox-limits">Sandbox limits</a>
+              <a href="#deterministic-audio">Deterministic audio</a>
+              <a href="#api">HTTP API</a>
+              <a href="#troubleshooting">Troubleshooting</a>
+            </div>
+          </div>
+          <div class="sidebar-group">
+            <h2>Elsewhere</h2>
+            <div class="sidebar-links">
+              <a href="/about">About Codexonia</a>
+              <a href="/privacy">Privacy note</a>
+              <a href="/submit">Open the editor</a>
+            </div>
+          </div>
+        </aside>
+
+        <article class="prose">
+          <h2 id="quick-start">Quick start</h2>
+          <p>
+            Open the <a href="/submit">Submit Code</a> page, edit the sample or paste
+            your own Java, and press <strong>Run</strong>. The backend compiles the
+            submission, starts it inside a hardened Docker sandbox, and records the
+            execution with the Java Debug Interface.
+          </p>
+          <ol>
+            <li>The main class is detected from the submitted files.</li>
+            <li>The program runs under JDI, bounded by the sandbox limits below.</li>
+            <li>The runner returns a versioned JSON trace with sources, stdout, and events.</li>
+            <li>The browser receives the trace; no program is re-executed during playback.</li>
+          </ol>
+          <div class="callout">
+            <div class="callout-icon"><span class="material-symbols-outlined">info</span></div>
+            <div class="callout-body">
+              <h3>Current build</h3>
+              <p>The run page shows the classified status, event stream, stdout, and raw JSON. The Java-authored timeline player is the next milestone; the trace contract described here stays the same.</p>
+            </div>
+          </div>
+
+          <h2 id="what-gets-traced">What gets traced</h2>
+          <p>
+            Trace schema v1 has three event types. They are deliberately small: each
+            event is an observation, not a rendered frame. Scene state is reconstructed
+            from the ordered event stream.
+          </p>
+          <table>
+            <thead>
+              <tr><th>Event</th><th>Meaning</th><th>Useful fields</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>METHOD_CALL</code></td>
+                <td>A method is entered.</td>
+                <td><code>class</code>, <code>method</code>, <code>args</code>, <code>line</code></td>
+              </tr>
+              <tr>
+                <td><code>ASSIGNMENT</code></td>
+                <td>A local variable receives a value.</td>
+                <td><code>var</code>, <code>old</code>, <code>new</code>, <code>line</code></td>
+              </tr>
+              <tr>
+                <td><code>METHOD_RETURN</code></td>
+                <td>A method returns to its caller.</td>
+                <td><code>class</code>, <code>method</code>, <code>ret</code>, <code>line</code></td>
+              </tr>
+            </tbody>
+          </table>
+          <p>
+            Every event also carries <code>seq</code>, <code>file</code>, and the source
+            line. The sequence number is the stable ordering key used by playback.
+          </p>
+
+          <h2 id="reading-a-trace">Reading a trace</h2>
+          <p>
+            A trace is a time-ordered list, not a snapshot. To answer “what was true at
+            step 12?”, replay the first twelve events in order and apply their effects:
+          </p>
+          <ol>
+            <li><strong>Stack:</strong> push on <code>METHOD_CALL</code>, pop on <code>METHOD_RETURN</code>.</li>
+            <li><strong>Variables:</strong> set the named local on <code>ASSIGNMENT</code>.</li>
+            <li><strong>Source position:</strong> use the event's <code>file</code> and <code>line</code>.</li>
+            <li><strong>Stdout:</strong> reveal the output produced up to that point.</li>
+          </ol>
+          <div class="split-cards">
+            <div class="mini-card">
+              <h3>Step backward</h3>
+              <p>Do not run the program again. Rebuild the earlier state from the trace, or jump to a cached keyframe.</p>
+            </div>
+            <div class="mini-card">
+              <h3>Step forward</h3>
+              <p>Apply the next event to the current state. The event is the only source of change.</p>
+            </div>
+          </div>
+          <h3>Example event</h3>
+          <div class="code-caption">
+            <span>trace.json · one event</span>
+            <button class="copy-btn" type="button" data-copy="event-json"><span class="material-symbols-outlined">content_copy</span> Copy</button>
+          </div>
+          <pre id="event-json"><code>{
+  "seq": 4,
+  "type": "ASSIGNMENT",
+  "file": "Sample.java",
+  "class": "Sample",
+  "method": "add",
+  "line": 7,
+  "var": "c",
+  "old": "0",
+  "new": "5"
+}</code></pre>
+
+          <h2 id="sandbox-limits">Sandbox limits</h2>
+          <p>
+            The defaults below are enforced by <code>LimitPolicy</code>. A limit hit is
+            a classified outcome, not a silent truncation. The student sees the reason.
+          </p>
+          <table>
+            <thead>
+              <tr><th>Resource</th><th>Default</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Memory</td><td>512 MB</td></tr>
+              <tr><td>CPU</td><td>1.0 core</td></tr>
+              <tr><td>Processes</td><td>64</td></tr>
+              <tr><td>Wall-clock timeout</td><td>30 seconds</td></tr>
+              <tr><td>Trace events</td><td>20,000</td></tr>
+              <tr><td>Stdout / stderr</td><td>64 KB each</td></tr>
+              <tr><td>Source size</td><td>256 KB</td></tr>
+              <tr><td>Source files</td><td>16</td></tr>
+              <tr><td>Sandbox tmpfs</td><td>32 MB</td></tr>
+            </tbody>
+          </table>
+          <p>
+            The container runs with no network, a read-only root filesystem, all Linux
+            capabilities dropped, and a non-root user. The host JVM never executes
+            student code in-process.
+          </p>
+
+          <h2 id="deterministic-audio">Deterministic audio</h2>
+          <p>
+            Sound is derived from the event signature, not from a persisted lookup
+            table. Codexonia uses FNV-1a 32-bit over the ASCII signature, then slices
+            the unsigned hash into pitch, timbre, and duration:
+          </p>
+          <ul>
+            <li><strong>Pitch:</strong> low bits select one of seven A-minor pentatonic notes.</li>
+            <li><strong>Timbre:</strong> middle bits select sine, triangle, square, or sawtooth.</li>
+            <li><strong>Duration:</strong> high bits select 150, 200, 250, or 300 ms.</li>
+          </ul>
+          <p>
+            The same signature always produces the same tone in every implementation.
+            The shared contract lives in <code>test-vectors.json</code> and must match
+            byte-for-byte. You can query the mapping directly:
+          </p>
+          <pre><code>GET /hash?input=swap</code></pre>
+          <div class="callout is-success">
+            <div class="callout-icon"><span class="material-symbols-outlined">graphic_eq</span></div>
+            <div class="callout-body">
+              <h3>Try a live hash</h3>
+              <p><a href="/hash?input=swap">Open /hash?input=swap</a> to see the signature, the 32-bit hash, and the resulting tone parameters.</p>
+            </div>
+          </div>
+
+          <h2 id="api">HTTP API</h2>
+          <h3>Run a submission</h3>
+          <p><code>POST /api/run</code> accepts either a single <code>source</code> string or a <code>files</code> array.</p>
+          <div class="code-caption">
+            <span>POST /api/run · multi-file</span>
+            <button class="copy-btn" type="button" data-copy="run-request"><span class="material-symbols-outlined">content_copy</span> Copy</button>
+          </div>
+          <pre id="run-request"><code>{
+  "files": [
+    {
+      "fileName": "Sample.java",
+      "source": "public class Sample { ... }",
+      "isMainFile": true
+    }
+  ]
+}</code></pre>
+          <p>
+            A successful response is a trace JSON object with <code>schema_version</code>,
+            <code>status</code>, <code>sources</code>, <code>stdout</code>,
+            <code>event_count</code>, and <code>events</code>. Validation failures,
+            compile errors, timeouts, output caps, and runtime errors use classified
+            status values.
+          </p>
+          <h3>Hash and tone mapping</h3>
+          <p><code>GET /hash?input=&lt;signature&gt;</code> returns the deterministic signature → hash → tone mapping. It is useful for testing cross-language implementations.</p>
+
+          <h2 id="troubleshooting">Troubleshooting</h2>
+          <table>
+            <thead>
+              <tr><th>What you see</th><th>What it means</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>COMPILE_ERROR</code></td><td>The Java source did not compile. Read the compiler message shown in the run panel.</td></tr>
+              <tr><td><code>NO_MAIN_METHOD</code></td><td>No class with <code>public static void main(String[])</code> was found.</td></tr>
+              <tr><td><code>TIMEOUT</code></td><td>The program exceeded the wall-clock limit. Look for an unbounded loop or blocking call.</td></tr>
+              <tr><td><code>EVENT_CAP</code></td><td>The trace reached 20,000 events. Reduce the amount of work in the sample.</td></tr>
+              <tr><td><code>OUTPUT_CAP</code></td><td>Stdout or stderr exceeded 64 KB. Print less, or summarize inside the program.</td></tr>
+              <tr><td>Sandbox image missing</td><td>Run <code>./run.sh</code> once to build <code>codexonia-sandbox:latest</code>.</td></tr>
+            </tbody>
+          </table>
+
+          <div class="contact-band">
+            <div>
+              <h2>Need a page that is not here?</h2>
+              <p>The field guide covers the tracer and trace contract. For the project rationale, see About.</p>
+            </div>
+            <a class="btn btn-secondary" href="/about">About the project</a>
+          </div>
+        </article>
+      </div>
+    </div>
+  </main>
+
+  <div id="site-footer"></div>
+  <script src="/assets/site.js" defer></script>
+</body>
+</html>

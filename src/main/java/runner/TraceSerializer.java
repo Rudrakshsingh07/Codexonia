@@ -13,8 +13,16 @@ public final class TraceSerializer {
     private TraceSerializer() {}
 
     public static String toJson(CodeSubmission submission, List<TraceEvent> events, String stdout, String status) {
+        return toJson(submission, events, stdout, status, null);
+    }
+
+    public static String toJson(CodeSubmission submission, List<TraceEvent> events, String stdout, String status,
+                                String errorMessage) {
         StringBuilder sb = new StringBuilder("{\"schema_version\":1");
         sb.append(",\"status\":").append(Json.escape(status));
+        if (errorMessage != null && !errorMessage.isBlank()) {
+            sb.append(",\"error_message\":").append(Json.escape(errorMessage));
+        }
         sb.append(",\"sources\":[");
         for (int i = 0; i < submission.files.size(); i++) {
             JavaSourceFile f = submission.files.get(i);

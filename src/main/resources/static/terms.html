@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Terms of Use — Codexonia</title>
+  <meta name="description" content="Plain-language terms for using Codexonia, a course-project Java execution tracer.">
+  <meta name="theme-color" content="#0059b5">
+  <link rel="icon" href="/assets/codexonia-mark.svg" type="image/svg+xml">
+  <link rel="preload" href="/assets/fonts/material-symbols-outlined.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/jetbrains-mono-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <script src="/assets/theme-init.js"></script>
+  <link rel="stylesheet" href="/assets/fonts.css">
+  <link rel="stylesheet" href="/assets/tailwind.css">
+  <link rel="stylesheet" href="/assets/site.css">
+  <link rel="stylesheet" href="/assets/content.css">
+</head>
+<body data-page="terms" class="bg-surface font-body-md text-body-md text-on-surface antialiased min-h-screen flex flex-col">
+  <div id="site-header"></div>
+
+  <main class="flex-1 pt-16">
+    <section class="page-hero">
+      <div class="shell page-hero-inner">
+        <span class="eyebrow"><span class="pulse-dot"></span> Terms of use</span>
+        <h1>Use it to understand code.</h1>
+        <p>
+          Codexonia is a course project provided for educational use. These terms are
+          intentionally short and written to be readable.
+        </p>
+        <div class="page-hero-meta">
+          <span><span class="material-symbols-outlined">school</span> Educational use</span>
+          <span><span class="material-symbols-outlined">gavel</span> Provided as-is</span>
+          <span><span class="material-symbols-outlined">update</span> October 2026</span>
+        </div>
+      </div>
+    </section>
+
+    <div class="shell page-body">
+      <article class="prose">
+        <h2 style="margin-top:0">The service</h2>
+        <p>
+          Codexonia compiles and executes submitted Java code in an isolated sandbox and
+          returns a structured execution trace. The service is intended for learning,
+          debugging, and demonstrating how Java programs behave.
+        </p>
+
+        <h2>Acceptable use</h2>
+        <p>You may submit code that you have the right to run. You may not use the service to:</p>
+        <ul>
+          <li>Attack, probe, or escape the sandbox or the host environment.</li>
+          <li>Run malicious code, denial-of-service workloads, or cryptocurrency miners.</li>
+          <li>Process data you are not authorized to process.</li>
+          <li>Violate applicable law or the rules of your course or institution.</li>
+        </ul>
+        <p>
+          The sandbox has no network access, but you are still responsible for what you
+          submit. The project team may restrict or stop the service if it is abused.
+        </p>
+
+        <h2>Your code</h2>
+        <p>
+          You retain ownership of the Java source you submit. By submitting it, you give
+          the project permission to compile, execute, and trace it for the purpose of
+          producing the requested run. The current build does not claim a persistent
+          license to store or publish your source.
+        </p>
+
+        <h2>No warranty</h2>
+        <p>
+          Codexonia is provided <strong>as-is</strong>, without warranties of any kind.
+          Execution may fail, traces may be incomplete, and the service may be
+          unavailable. Do not rely on it for production, security-sensitive, or
+          graded work where a failure would be harmful.
+        </p>
+
+        <h2>Limits</h2>
+        <p>
+          Runs are bounded by time, memory, output size, source size, file count, and
+          event count. A limit hit is reported as a classified outcome. The current
+          defaults are listed in the <a href="/docs#sandbox-limits">field guide</a>.
+        </p>
+
+        <h2>Changes</h2>
+        <p>
+          The project may change these terms as the implementation evolves. The date at
+          the top of this page records the last update.
+        </p>
+
+        <h2>Contact and attribution</h2>
+        <p>
+          Codexonia is a course project. See the <a href="/about">About page</a> for the
+          project description and the <a href="/privacy">privacy note</a> for data
+          handling.
+        </p>
+
+        <div class="contact-band">
+          <div>
+            <h2>Ready to use it properly?</h2>
+            <p>Read the field guide first, then bring a program you want to understand.</p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <a class="btn btn-primary" href="/submit">Open the editor</a>
+            <a class="btn btn-secondary" href="/docs">Field guide</a>
+          </div>
+        </div>
+      </article>
+    </div>
+  </main>
+
+  <div id="site-footer"></div>
+  <script src="/assets/site.js" defer></script>
+</body>
+</html>

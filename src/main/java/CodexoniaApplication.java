@@ -20,4 +20,9 @@ public class CodexoniaApplication {
     RunController runController() {
         return new RunController();
     }
+
+    @Bean
+    PageController pageController() {
+        return new PageController();
+    }
 }
